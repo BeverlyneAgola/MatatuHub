@@ -1,0 +1,264 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ vehicle.reg_no }} - Fleet</title>
+</head>
+
+<body>
+
+    <h1>Vehicle: {{ vehicle.reg_no }}</h1>
+
+    <h2>Vehicle Information</h2>
+
+    <p>
+        <strong>Registration:</strong>
+        {{ vehicle.reg_no }}
+    </p>
+
+    <p>
+        <strong>Make:</strong>
+        {{ vehicle.make or "-" }}
+    </p>
+
+    <p>
+        <strong>Year:</strong>
+        {{ vehicle.year or "-" }}
+    </p>
+
+    <p>
+        <strong>Type:</strong>
+        {{ vehicle.type or "-" }}
+    </p>
+
+    <p>
+        <strong>Ownership:</strong>
+        {{ vehicle.ownership or "-" }}
+    </p>
+
+    <p>
+        <strong>Status:</strong>
+        {{ vehicle.status }}
+    </p>
+
+
+    <h2>Change Status</h2>
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'fleet.change_vehicle_status',
+            id=vehicle.id
+        ) }}"
+    >
+
+        <select name="status" required>
+
+            <option
+                value="active"
+                {% if vehicle.status == "active" %}
+                selected
+                {% endif %}
+            >
+                Active
+            </option>
+
+            <option
+                value="under_maintenance"
+                {% if vehicle.status == "under_maintenance" %}
+                selected
+                {% endif %}
+            >
+                Under Maintenance
+            </option>
+
+            <option
+                value="out_of_service"
+                {% if vehicle.status == "out_of_service" %}
+                selected
+                {% endif %}
+            >
+                Out of Service
+            </option>
+
+            <option
+                value="retired"
+                {% if vehicle.status == "retired" %}
+                selected
+                {% endif %}
+            >
+                Retired
+            </option>
+
+        </select>
+
+        <button type="submit">
+            Change Status
+        </button>
+
+    </form>
+
+
+    <h2>Documents</h2>
+
+    <p>
+        <a href="{{ url_for(
+            'fleet.vehicle_documents',
+            id=vehicle.id
+        ) }}">
+            Manage Documents
+        </a>
+    </p>
+
+    {% for document in documents %}
+
+    <p>
+
+        {{ document.doc_type }}
+
+        {% if document.document_number %}
+            — {{ document.document_number }}
+        {% endif %}
+
+        {% if document.expiry_date %}
+
+            — Expires:
+            {{ document.expiry_date }}
+
+            {% if document.expiry_date < today %}
+                <strong>
+                    EXPIRED
+                </strong>
+            {% endif %}
+
+        {% endif %}
+
+    </p>
+
+    {% else %}
+
+    <p>
+        No documents recorded.
+    </p>
+
+    {% endfor %}
+
+
+    <h2>Maintenance</h2>
+
+    <p>
+        <a href="{{ url_for(
+            'fleet.vehicle_maintenance',
+            id=vehicle.id
+        ) }}">
+            Manage Maintenance
+        </a>
+    </p>
+
+    {% for record in maintenance_records %}
+
+    <p>
+
+        <strong>
+            {{ record.date }}
+        </strong>
+
+        — {{ record.description }}
+
+        {% if record.cost %}
+            — KSh {{ record.cost }}
+        {% endif %}
+
+    </p>
+
+    {% else %}
+
+    <p>
+        No maintenance records.
+    </p>
+
+    {% endfor %}
+
+
+    <h2>Allocations</h2>
+
+    {% for allocation in allocations %}
+
+    <p>
+
+        {{ allocation.started_at }}
+
+        — Status:
+        {{ allocation.status }}
+
+        {% if allocation.status == "active" %}
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'fleet.end_allocation',
+                id=allocation.id
+            ) }}"
+            style="display:inline;"
+        >
+
+            <button type="submit">
+                End Allocation
+            </button>
+
+        </form>
+
+        {% endif %}
+
+    </p>
+
+    {% else %}
+
+    <p>
+        No allocations recorded.
+    </p>
+
+    {% endfor %}
+
+
+    <h2>Accidents</h2>
+
+    {% for accident in accidents %}
+
+    <p>
+
+        <strong>
+            {{ accident.date }}
+        </strong>
+
+        — {{ accident.description }}
+
+        — Status:
+        {{ accident.status }}
+
+    </p>
+
+    {% else %}
+
+    <p>
+        No accidents recorded.
+    </p>
+
+    {% endfor %}
+
+
+    <p>
+
+        <a href="{{ url_for(
+            'fleet.list_vehicles'
+        ) }}">
+            Back to Vehicles
+        </a>
+
+    </p>
+
+</body>
+
+</html>

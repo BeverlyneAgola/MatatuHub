@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Profile - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>Employee Profile</h1>
+
+    <p>
+        <strong>Staff ID:</strong>
+        {{ employee.staff_id }}
+    </p>
+
+    <p>
+        <strong>Name:</strong>
+        {{ employee.first_name }}
+        {{ employee.last_name }}
+    </p>
+
+    <p>
+        <strong>National ID:</strong>
+        {{ employee.national_id }}
+    </p>
+
+    <p>
+        <strong>Department:</strong>
+        {{ employee.department.name }}
+    </p>
+
+    <p>
+        <strong>Role:</strong>
+        {{ employee.role.name }}
+    </p>
+
+    <p>
+        <strong>Phone:</strong>
+        {{ employee.phone or "Not provided" }}
+    </p>
+
+    <p>
+        <strong>Email:</strong>
+        {{ employee.email or "Not provided" }}
+    </p>
+
+    <p>
+        <strong>KRA PIN:</strong>
+        {{ employee.kra_pin or "Not provided" }}
+    </p>
+
+    <p>
+        <strong>Employee Status:</strong>
+        {{ employee.status }}
+    </p>
+
+    {% if user %}
+
+    <p>
+        <strong>Username:</strong>
+        {{ user.username }}
+    </p>
+
+    <p>
+        <strong>Account Status:</strong>
+        {{ user.account_status }}
+    </p>
+
+    {% endif %}
+
+
+    <h2>Change Status</h2>
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'hr.change_status',
+            id=employee.id
+        ) }}"
+    >
+
+        <select name="status">
+
+            <option
+                value="active"
+                {% if employee.status == "active" %}
+                    selected
+                {% endif %}
+            >
+                Active
+            </option>
+
+            <option
+                value="fired"
+                {% if employee.status == "fired" %}
+                    selected
+                {% endif %}
+            >
+                Fired
+            </option>
+
+        </select>
+
+        <button type="submit">
+            Change Status
+        </button>
+
+    </form>
+
+
+    <h2>Change Role</h2>
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'hr.change_role',
+            id=employee.id
+        ) }}"
+    >
+
+        <select name="role_id" required>
+
+            {% for role in employee.role.__class__.query.order_by(
+                employee.role.__class__.name
+            ).all() %}
+
+            <option
+                value="{{ role.id }}"
+                {% if role.id == employee.role_id %}
+                    selected
+                {% endif %}
+            >
+                {{ role.name }}
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+        <button type="submit">
+            Change Role
+        </button>
+
+    </form>
+
+
+    <h2>Role History</h2>
+
+    <table border="1">
+
+        <thead>
+
+            <tr>
+                <th>Previous Role</th>
+                <th>Changed At</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for history in role_history %}
+
+            <tr>
+
+                <td>
+                    {{ history.role.name }}
+                </td>
+
+                <td>
+                    {{ history.changed_at }}
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+                <td colspan="2">
+                    No role history.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+
+    <p>
+        <a href="{{ url_for('hr.list_employees') }}">
+            Back to Employees
+        </a>
+    </p>
+
+</body>
+
+</html>

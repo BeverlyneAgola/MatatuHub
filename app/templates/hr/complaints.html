@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Complaints - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>Complaints</h1>
+
+    <p>
+        <a href="{{ url_for('hr.new_complaint') }}">
+            Record Complaint
+        </a>
+    </p>
+
+    <form method="GET">
+
+        <label for="category">
+            Category:
+        </label>
+
+        <select name="category" id="category">
+
+            <option value="">
+                All
+            </option>
+
+            <option
+                value="internal"
+                {% if selected_category == "internal" %}
+                    selected
+                {% endif %}
+            >
+                Internal
+            </option>
+
+            <option
+                value="external"
+                {% if selected_category == "external" %}
+                    selected
+                {% endif %}
+            >
+                External
+            </option>
+
+        </select>
+
+
+        <label for="status">
+            Status:
+        </label>
+
+        <select name="status" id="status">
+
+            <option value="">
+                All
+            </option>
+
+            <option
+                value="unresolved"
+                {% if selected_status == "unresolved" %}
+                    selected
+                {% endif %}
+            >
+                Unresolved
+            </option>
+
+            <option
+                value="resolved"
+                {% if selected_status == "resolved" %}
+                    selected
+                {% endif %}
+            >
+                Resolved
+            </option>
+
+        </select>
+
+        <button type="submit">
+            Filter
+        </button>
+
+    </form>
+
+    <br>
+
+    <table border="1">
+
+        <thead>
+
+            <tr>
+                <th>ID</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Action Taken</th>
+                <th>Created</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for complaint in complaints %}
+
+            <tr>
+
+                <td>
+                    {{ complaint.id }}
+                </td>
+
+                <td>
+                    {{ complaint.category }}
+                </td>
+
+                <td>
+                    {{ complaint.description }}
+                </td>
+
+                <td>
+                    {{ complaint.status }}
+                </td>
+
+                <td>
+                    {{ complaint.action_taken or "—" }}
+                </td>
+
+                <td>
+                    {{ complaint.created_at }}
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+                <td colspan="6">
+                    No complaints found.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</body>
+
+</html>

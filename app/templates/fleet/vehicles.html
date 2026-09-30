@@ -1,0 +1,92 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Fleet Vehicles - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>Fleet Vehicles</h1>
+
+    <p>
+        <a href="{{ url_for('fleet.new_vehicle') }}">
+            Add Vehicle
+        </a>
+    </p>
+
+    <table border="1" cellpadding="8">
+
+        <thead>
+            <tr>
+                <th>Registration</th>
+                <th>Make</th>
+                <th>Year</th>
+                <th>Type</th>
+                <th>Ownership</th>
+                <th>Status</th>
+                <th>View</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for vehicle in vehicles %}
+
+            <tr>
+
+                <td>
+                    {{ vehicle.reg_no }}
+                </td>
+
+                <td>
+                    {{ vehicle.make or "-" }}
+                </td>
+
+                <td>
+                    {{ vehicle.year or "-" }}
+                </td>
+
+                <td>
+                    {{ vehicle.type or "-" }}
+                </td>
+
+                <td>
+                    {{ vehicle.ownership or "-" }}
+                </td>
+
+                <td>
+                    {{ vehicle.status }}
+                </td>
+
+                <td>
+                    <a href="{{ url_for(
+                        'fleet.view_vehicle',
+                        id=vehicle.id
+                    ) }}">
+                        View
+                    </a>
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+                <td colspan="7">
+                    No vehicles have been registered.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</body>
+
+</html>
+

@@ -1,0 +1,118 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Maintenance - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>
+        Maintenance — {{ vehicle.reg_no }}
+    </h1>
+
+    <h2>Add Maintenance Record</h2>
+
+    <form method="POST">
+
+        <p>
+
+            <label for="description">
+                Description
+            </label>
+
+            <textarea
+                name="description"
+                id="description"
+                required
+            ></textarea>
+
+        </p>
+
+        <p>
+
+            <label for="cost">
+                Cost
+            </label>
+
+            <input
+                type="number"
+                step="0.01"
+                name="cost"
+                id="cost"
+            >
+
+        </p>
+
+        <p>
+
+            <label for="date">
+                Date
+            </label>
+
+            <input
+                type="date"
+                name="date"
+                id="date"
+            >
+
+        </p>
+
+        <button type="submit">
+            Add Maintenance Record
+        </button>
+
+    </form>
+
+
+    <h2>Maintenance History</h2>
+
+    {% for record in maintenance_records %}
+
+    <div>
+
+        <p>
+            <strong>
+                {{ record.date }}
+            </strong>
+        </p>
+
+        <p>
+            {{ record.description }}
+        </p>
+
+        <p>
+            Cost:
+            {{ record.cost or "-" }}
+        </p>
+
+        <hr>
+
+    </div>
+
+    {% else %}
+
+    <p>
+        No maintenance records.
+    </p>
+
+    {% endfor %}
+
+
+    <p>
+
+        <a href="{{ url_for(
+            'fleet.view_vehicle',
+            id=vehicle.id
+        ) }}">
+            Back to Vehicle
+        </a>
+
+    </p>
+
+</body>
+
+</html>
+

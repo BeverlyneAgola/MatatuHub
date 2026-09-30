@@ -1,0 +1,156 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>New Allocation - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>New Vehicle Allocation</h1>
+
+    <form method="POST">
+
+        <p>
+
+            <label for="driver_id">
+                Driver
+            </label>
+
+            <select
+                name="driver_id"
+                id="driver_id"
+                required
+            >
+
+                <option value="">
+                    Select Driver
+                </option>
+
+                {% for driver in drivers %}
+
+                <option value="{{ driver.id }}">
+                    {{ driver.first_name }}
+                    {{ driver.last_name }}
+                    — {{ driver.staff_id }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </p>
+
+
+        <p>
+
+            <label for="conductor_id">
+                Conductor
+            </label>
+
+            <select
+                name="conductor_id"
+                id="conductor_id"
+                required
+            >
+
+                <option value="">
+                    Select Conductor
+                </option>
+
+                {% for conductor in conductors %}
+
+                <option value="{{ conductor.id }}">
+                    {{ conductor.first_name }}
+                    {{ conductor.last_name }}
+                    — {{ conductor.staff_id }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </p>
+
+
+        <p>
+
+            <label for="vehicle_id">
+                Vehicle
+            </label>
+
+            <select
+                name="vehicle_id"
+                id="vehicle_id"
+                required
+            >
+
+                <option value="">
+                    Select Vehicle
+                </option>
+
+                {% for vehicle in vehicles %}
+
+                <option value="{{ vehicle.id }}">
+                    {{ vehicle.reg_no }}
+                    — {{ vehicle.make or "" }}
+                    — {{ vehicle.status }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </p>
+
+
+        <p>
+
+            <label for="route_id">
+                Route
+            </label>
+
+            <select
+                name="route_id"
+                id="route_id"
+                required
+            >
+
+                <option value="">
+                    Select Route
+                </option>
+
+                {% for route in routes %}
+
+                <option value="{{ route.id }}">
+                    {{ route.name }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </p>
+
+
+        <button type="submit">
+            Create Allocation
+        </button>
+
+    </form>
+
+
+    <p>
+        <a href="{{ url_for(
+            'fleet.list_vehicles'
+        ) }}">
+            Back to Vehicles
+        </a>
+    </p>
+
+</body>
+
+</html>
+

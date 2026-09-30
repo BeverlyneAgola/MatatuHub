@@ -1,0 +1,116 @@
+
+html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Report Accident - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>Report Accident</h1>
+
+    <form method="POST">
+
+        <p>
+
+            <label for="vehicle_id">
+                Vehicle
+            </label>
+
+            <select
+                name="vehicle_id"
+                id="vehicle_id"
+                required
+            >
+
+                <option value="">
+                    Select Vehicle
+                </option>
+
+                {% for vehicle in vehicles %}
+
+                <option value="{{ vehicle.id }}">
+                    {{ vehicle.reg_no }}
+                    — {{ vehicle.make or "" }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </p>
+
+
+        <p>
+
+            <label for="driver_id">
+                Driver
+            </label>
+
+            <select
+                name="driver_id"
+                id="driver_id"
+            >
+
+                <option value="">
+                    Select Driver
+                </option>
+
+                {% for driver in drivers %}
+
+                <option value="{{ driver.id }}">
+                    {{ driver.first_name }}
+                    {{ driver.last_name }}
+                    — {{ driver.staff_id }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </p>
+
+
+        <p>
+
+            <label for="date">
+                Date and Time
+            </label>
+
+            <input
+                type="datetime-local"
+                name="date"
+                id="date"
+            >
+
+        </p>
+
+
+        <p>
+
+            <label for="description">
+                Description
+            </label>
+
+            <textarea
+                name="description"
+                id="description"
+                required
+            ></textarea>
+
+        </p>
+
+
+        <button type="submit">
+            Report Accident
+        </button>
+
+    </form>
+
+</body>
+
+</html>
+

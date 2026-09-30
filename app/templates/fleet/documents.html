@@ -1,0 +1,164 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Vehicle Documents - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>
+        Documents — {{ vehicle.reg_no }}
+    </h1>
+
+    <h2>Add Document</h2>
+
+    <form method="POST">
+
+        <p>
+
+            <label for="doc_type">
+                Document Type
+            </label>
+
+            <select
+                name="doc_type"
+                id="doc_type"
+                required
+            >
+
+                <option value="">
+                    Select Document
+                </option>
+
+                <option value="insurance">
+                    Insurance
+                </option>
+
+                <option value="logbook">
+                    Logbook
+                </option>
+
+                <option value="inspection">
+                    Inspection
+                </option>
+
+            </select>
+
+        </p>
+
+        <p>
+
+            <label for="document_number">
+                Document Number
+            </label>
+
+            <input
+                type="text"
+                name="document_number"
+                id="document_number"
+            >
+
+        </p>
+
+        <p>
+
+            <label for="issue_date">
+                Issue Date
+            </label>
+
+            <input
+                type="date"
+                name="issue_date"
+                id="issue_date"
+            >
+
+        </p>
+
+        <p>
+
+            <label for="expiry_date">
+                Expiry Date
+            </label>
+
+            <input
+                type="date"
+                name="expiry_date"
+                id="expiry_date"
+            >
+
+        </p>
+
+        <button type="submit">
+            Add Document
+        </button>
+
+    </form>
+
+
+    <h2>Existing Documents</h2>
+
+    {% for document in documents %}
+
+    <div>
+
+        <p>
+            <strong>
+                {{ document.doc_type }}
+            </strong>
+        </p>
+
+        <p>
+            Number:
+            {{ document.document_number or "-" }}
+        </p>
+
+        <p>
+            Issue Date:
+            {{ document.issue_date or "-" }}
+        </p>
+
+        <p>
+            Expiry Date:
+            {{ document.expiry_date or "-" }}
+        </p>
+
+        {% if document.expiry_date
+              and document.expiry_date < today %}
+
+            <strong>
+                EXPIRED — allocation is NOT blocked.
+            </strong>
+
+        {% endif %}
+
+        <hr>
+
+    </div>
+
+    {% else %}
+
+    <p>
+        No documents recorded.
+    </p>
+
+    {% endfor %}
+
+
+    <p>
+
+        <a href="{{ url_for(
+            'fleet.view_vehicle',
+            id=vehicle.id
+        ) }}">
+            Back to Vehicle
+        </a>
+
+    </p>
+
+</body>
+
+</html>
+

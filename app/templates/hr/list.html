@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Employees - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>Employees</h1>
+
+    <p>
+        <a href="{{ url_for('hr.new_employee') }}">
+            Enroll New Employee
+        </a>
+    </p>
+
+    <form method="GET">
+
+        <label for="department_id">
+            Department:
+        </label>
+
+        <select name="department_id" id="department_id">
+
+            <option value="">
+                All Departments
+            </option>
+
+            {% for department in departments %}
+
+                <option
+                    value="{{ department.id }}"
+                    {% if selected_department == department.id %}
+                        selected
+                    {% endif %}
+                >
+                    {{ department.name }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <label for="role_id">
+            Role:
+        </label>
+
+        <select name="role_id" id="role_id">
+
+            <option value="">
+                All Roles
+            </option>
+
+            {% for role in roles %}
+
+                <option
+                    value="{{ role.id }}"
+                    {% if selected_role == role.id %}
+                        selected
+                    {% endif %}
+                >
+                    {{ role.name }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+        <button type="submit">
+            Filter
+        </button>
+
+    </form>
+
+    <br>
+
+    <table border="1">
+
+        <thead>
+
+            <tr>
+                <th>Staff ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Profile</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for employee in employees %}
+
+            <tr>
+
+                <td>
+                    {{ employee.staff_id }}
+                </td>
+
+                <td>
+                    {{ employee.first_name }}
+                    {{ employee.last_name }}
+                </td>
+
+                <td>
+                    {{ employee.department.name }}
+                </td>
+
+                <td>
+                    {{ employee.role.name }}
+                </td>
+
+                <td>
+                    {{ employee.status }}
+                </td>
+
+                <td>
+                    <a href="{{ url_for(
+                        'hr.view_employee',
+                        id=employee.id
+                    ) }}">
+                        View
+                    </a>
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+                <td colspan="6">
+                    No employees found.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</body>
+
+</html>

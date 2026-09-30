@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Enroll Employee - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>Enroll New Employee</h1>
+
+    <form method="POST">
+
+        <h2>Personal Information</h2>
+
+        <div>
+            <label for="national_id">
+                National ID
+            </label>
+
+            <input
+                type="text"
+                id="national_id"
+                name="national_id"
+                required
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="first_name">
+                First Name
+            </label>
+
+            <input
+                type="text"
+                id="first_name"
+                name="first_name"
+                required
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="last_name">
+                Last Name
+            </label>
+
+            <input
+                type="text"
+                id="last_name"
+                name="last_name"
+                required
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="phone">
+                Phone
+            </label>
+
+            <input
+                type="text"
+                id="phone"
+                name="phone"
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="email">
+                Email
+            </label>
+
+            <input
+                type="email"
+                id="email"
+                name="email"
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="kra_pin">
+                KRA PIN
+            </label>
+
+            <input
+                type="text"
+                id="kra_pin"
+                name="kra_pin"
+            >
+        </div>
+
+
+        <h2>Employment Information</h2>
+
+        <div>
+
+            <label for="department_id">
+                Department
+            </label>
+
+            <select
+                name="department_id"
+                id="department_id"
+                required
+            >
+
+                <option value="">
+                    Select Department
+                </option>
+
+                {% for department in departments %}
+
+                <option value="{{ department.id }}">
+                    {{ department.name }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+        <br>
+
+        <div>
+
+            <label for="role_id">
+                Role
+            </label>
+
+            <select
+                name="role_id"
+                id="role_id"
+                required
+                disabled
+            >
+
+                <option value="">
+                    Select Department First
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <h2>Login Account</h2>
+
+        <div>
+
+            <label for="username">
+                Username
+            </label>
+
+            <input
+                type="text"
+                id="username"
+                name="username"
+                required
+            >
+
+        </div>
+
+        <br>
+
+        <div>
+
+            <label for="temp_password">
+                Temporary Password
+            </label>
+
+            <input
+                type="password"
+                id="temp_password"
+                name="temp_password"
+                required
+            >
+
+        </div>
+
+        <br>
+
+        <button type="submit">
+            Enroll Employee
+        </button>
+
+    </form>
+
+
+    <p>
+        <a href="{{ url_for('hr.list_employees') }}">
+            Back to Employees
+        </a>
+    </p>
+
+
+    <script>
+
+        const departmentSelect =
+            document.getElementById("department_id");
+
+        const roleSelect =
+            document.getElementById("role_id");
+
+
+        departmentSelect.addEventListener(
+            "change",
+            function () {
+
+                const departmentId = this.value;
+
+
+                // Clear the current role options.
+                roleSelect.innerHTML = "";
+
+
+                // No department selected.
+                if (!departmentId) {
+
+                    roleSelect.disabled = true;
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value = "";
+
+                    option.textContent =
+                        "Select Department First";
+
+                    roleSelect.appendChild(option);
+
+                    return;
+                }
+
+
+                // Show loading message.
+                roleSelect.disabled = true;
+
+                const loadingOption =
+                    document.createElement("option");
+
+                loadingOption.value = "";
+
+                loadingOption.textContent =
+                    "Loading positions...";
+
+                roleSelect.appendChild(
+                    loadingOption
+                );
+
+
+                // Request roles belonging to
+                // the selected department.
+                fetch(
+                    `/hr/roles/${departmentId}`
+                )
+
+                .then(response => {
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            "Failed to load positions."
+                        );
+
+                    }
+
+                    return response.json();
+
+                })
+
+                .then(roles => {
+
+                    // Clear loading message.
+                    roleSelect.innerHTML = "";
+
+
+                    // Default option.
+                    const defaultOption =
+                        document.createElement("option");
+
+                    defaultOption.value = "";
+
+                    defaultOption.textContent =
+                        "Select Position";
+
+                    roleSelect.appendChild(
+                        defaultOption
+                    );
+
+
+                    // Add department-specific roles.
+                    roles.forEach(role => {
+
+                        const option =
+                            document.createElement(
+                                "option"
+                            );
+
+                        option.value = role.id;
+
+                        option.textContent =
+                            role.name;
+
+                        roleSelect.appendChild(
+                            option
+                        );
+
+                    });
+
+
+                    // Enable role dropdown.
+                    roleSelect.disabled = false;
+
+                })
+
+                .catch(error => {
+
+                    console.error(error);
+
+                    roleSelect.innerHTML = "";
+
+
+                    const errorOption =
+                        document.createElement(
+                            "option"
+                        );
+
+                    errorOption.value = "";
+
+                    errorOption.textContent =
+                        "Unable to load positions";
+
+                    roleSelect.appendChild(
+                        errorOption
+                    );
+
+                });
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
