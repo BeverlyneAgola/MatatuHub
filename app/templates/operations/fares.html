@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Fares - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>Fares</h1>
+
+    <h2>{{ route.name }}</h2>
+
+    <p>
+        {{ route.start_point }} → {{ route.destination }}
+    </p>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div>
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% if current_user.employee.role.name in [
+        "Operations Manager",
+        "Operations Officer"
+    ] %}
+
+        <p>
+            <a href="{{ url_for(
+                'operations.new_fare',
+                route_id=route.id
+            ) }}">
+                Add New Fare
+            </a>
+        </p>
+
+    {% endif %}
+
+    {% if fares %}
+
+        <table border="1" cellpadding="8">
+
+            <thead>
+                <tr>
+                    <th>Direction</th>
+                    <th>Time Band</th>
+                    <th>Amount</th>
+                    <th>Effective From</th>
+                    <th>Effective Until</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for fare in fares %}
+
+                    <tr>
+
+                        <td>{{ fare.direction }}</td>
+
+                        <td>
+                            {% if fare.time_band == "peak" %}
+                                Peak
+                            {% else %}
+                                Off-Peak
+                            {% endif %}
+                        </td>
+
+                        <td>{{ fare.amount }}</td>
+
+                        <td>{{ fare.effective_from }}</td>
+
+                        <td>
+                            {% if fare.effective_until %}
+                                {{ fare.effective_until }}
+                            {% else %}
+                                Current
+                            {% endif %}
+                        </td>
+
+                        <td>
+
+                            {% if current_user.employee.role.name in [
+                                "Operations Manager",
+                                "Operations Officer"
+                            ] %}
+
+                                {% if not fare.effective_until %}
+
+                                    <a href="{{ url_for(
+                                        'operations.edit_fare',
+                                        fare_id=fare.id
+                                    ) }}">
+                                        Update
+                                    </a>
+
+                                {% else %}
+
+                                    Historical
+
+                                {% endif %}
+
+                            {% else %}
+
+                                View Only
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <p>No fares have been created for this route yet.</p>
+
+    {% endif %}
+
+    <p>
+        <a href="{{ url_for(
+            'operations.view_route',
+            id=route.id
+        ) }}">
+            Back to Route
+        </a>
+    </p>
+
+</body>
+
+</html>

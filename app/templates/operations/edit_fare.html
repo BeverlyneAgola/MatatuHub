@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Update Fare - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>Update Fare</h1>
+
+    <h2>{{ route.name }}</h2>
+
+    <p>
+        Direction: {{ fare.direction }}
+    </p>
+
+    <p>
+        Time Band:
+        {% if fare.time_band == "peak" %}
+            Peak
+        {% else %}
+            Off-Peak
+        {% endif %}
+    </p>
+
+    <p>
+        Current Amount: {{ fare.amount }}
+    </p>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div>
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+
+        <div>
+            <label for="amount">
+                New Fare Amount
+            </label><br>
+
+            <input
+                type="number"
+                id="amount"
+                name="amount"
+                min="0.01"
+                step="0.01"
+                required
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="effective_from">
+                New Fare Effective From
+            </label><br>
+
+            <input
+                type="date"
+                id="effective_from"
+                name="effective_from"
+                required
+            >
+        </div>
+
+        <br>
+
+        <button type="submit">
+            Update Fare
+        </button>
+
+    </form>
+
+    <p>
+        <a href="{{ url_for(
+            'operations.list_fares',
+            route_id=route.id
+        ) }}">
+            Back to Fares
+        </a>
+    </p>
+
+</body>
+
+</html>

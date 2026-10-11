@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>New Route - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>New Route</h1>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div>
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+
+        <div>
+            <label for="name">Route Name</label><br>
+
+            <input
+                type="text"
+                id="name"
+                name="name"
+                required
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="start_point">Start Point</label><br>
+
+            <input
+                type="text"
+                id="start_point"
+                name="start_point"
+                required
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="destination">Destination</label><br>
+
+            <input
+                type="text"
+                id="destination"
+                name="destination"
+                required
+            >
+        </div>
+
+        <br>
+
+        <button type="submit">
+            Create Route
+        </button>
+
+    </form>
+
+    <p>
+        <a href="{{ url_for('operations.list_routes') }}">
+            Back to Routes
+        </a>
+    </p>
+
+</body>
+
+</html>

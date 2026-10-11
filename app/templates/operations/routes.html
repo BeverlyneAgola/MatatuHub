@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Routes - MatatuHub</title>
+</head>
+
+<body>
+
+    <h1>Routes</h1>
+
+    <p>
+        <a href="{{ url_for('operations.new_route') }}">
+            Add New Route
+        </a>
+    </p>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div>
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% if routes %}
+
+        <table border="1" cellpadding="8">
+
+            <thead>
+                <tr>
+                    <th>Route Name</th>
+                    <th>Start Point</th>
+                    <th>Destination</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for route in routes %}
+
+                    <tr>
+                        <td>{{ route.name }}</td>
+                        <td>{{ route.start_point }}</td>
+                        <td>{{ route.destination }}</td>
+                        <td>{{ route.status }}</td>
+
+                        <td>
+                            <a href="{{ url_for('operations.view_route', id=route.id) }}">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <p>No routes have been created yet.</p>
+
+    {% endif %}
+
+</body>
+
+</html>
