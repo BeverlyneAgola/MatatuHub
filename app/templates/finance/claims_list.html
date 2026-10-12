@@ -1,0 +1,201 @@
+
+
+<h1>Claims Management</h1>
+
+<p>
+    <a href="{{ url_for('finance.list_payroll') }}">
+        Payroll
+    </a>
+    |
+    <a href="{{ url_for('finance.new_budget') }}">
+        Budgets
+    </a>
+    |
+    <a href="{{ url_for('finance.collections_report') }}">
+        Collections
+    </a>
+</p>
+
+<hr>
+
+<form method="GET" action="{{ url_for('finance.list_claims') }}">
+
+    <label for="status">Filter by Status</label>
+
+    <select id="status" name="status">
+
+        <option
+            value="pending"
+            {% if selected_status == "pending" %}selected{% endif %}
+        >
+            Pending
+        </option>
+
+        <option
+            value="approved"
+            {% if selected_status == "approved" %}selected{% endif %}
+        >
+            Approved
+        </option>
+
+        <option
+            value="rejected"
+            {% if selected_status == "rejected" %}selected{% endif %}
+        >
+            Rejected
+        </option>
+
+        <option
+            value="all"
+            {% if selected_status == "all" %}selected{% endif %}
+        >
+            All
+        </option>
+
+    </select>
+
+    <button type="submit">Filter</button>
+
+</form>
+
+<hr>
+
+{% if claims %}
+
+<table border="1" cellpadding="8" cellspacing="0">
+
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Department</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Requested Amount</th>
+            <th>Status</th>
+            <th>Compensation</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for claim in claims %}
+
+        <tr>
+
+            <td>{{ claim.id }}</td>
+
+            <td>{{ claim.department }}</td>
+
+            <td>{{ claim.category }}</td>
+
+            <td>{{ claim.description }}</td>
+
+            <td>
+                KSh {{ "%.2f"|format(claim.amount_requested or 0) }}
+            </td>
+
+            <td>{{ claim.status|title }}</td>
+
+            <td>
+
+                {% set compensation = compensation_map[claim.id] %}
+
+                {% if compensation %}
+
+                    KSh {{ "%.2f"|format(compensation.amount) }}
+
+                {% else %}
+
+                    Not recorded
+
+                {% endif %}
+
+            </td>
+
+            <td>
+
+                {% if claim.status == "pending" %}
+
+                    {% if claim.category|lower == "accident" %}
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'finance.approve_claim',
+                                claim_id=claim.id
+                            ) }}"
+                        >
+
+                            <label>
+                                Compensation Amount (KSh)
+                            </label>
+
+                            <input
+                                type="number"
+                                name="amount"
+                                min="0.01"
+                                step="0.01"
+                                value="{{ claim.amount_requested or '' }}"
+                                required
+                            >
+
+                            <button type="submit">
+                                Approve
+                            </button>
+
+                        </form>
+
+                    {% else %}
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'finance.approve_claim',
+                                claim_id=claim.id
+                            ) }}"
+                        >
+
+                            <button type="submit">
+                                Approve
+                            </button>
+
+                        </form>
+
+                    {% endif %}
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'finance.reject_claim',
+                            claim_id=claim.id
+                        ) }}"
+                    >
+
+                        <button type="submit">
+                            Reject
+                        </button>
+
+                    </form>
+
+                {% else %}
+
+                    Reviewed
+
+                {% endif %}
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% else %}
+
+<p>No claims found for the selected status.</p>
+
+{% endif %}

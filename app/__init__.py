@@ -16,18 +16,24 @@ def create_app():
 
     from app import models
 
+    from app.finance.routes import finance_bp
     from app.auth.routes import auth_bp
     from app.hr.routes import hr_bp
     from app.fleet import fleet_bp
     from app.operations.routes import operations_bp
     from app.operations.schedules.routes import schedules_bp
+    from app.driver.routes import driver_bp
+    from app.conductor.routes import conductor_bp
+
 
     app.register_blueprint(fleet_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(hr_bp)
+    app.register_blueprint(driver_bp)
     app.register_blueprint(operations_bp)
     app.register_blueprint(schedules_bp)
-
+    app.register_blueprint(finance_bp)
+    app.register_blueprint(conductor_bp)
     @app.route("/")
     def home():
         return "MatatuHub is running."

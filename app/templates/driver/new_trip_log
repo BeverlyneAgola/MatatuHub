@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log a Trip | MatatuHub</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f4f6f9;
+            color: #222;
+        }
+
+    h1, h2 {
+        color: #243447;
+    }
+
+    .card {
+        max-width: 650px;
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    label {
+        display: block;
+        margin-top: 18px;
+        font-weight: bold;
+    }
+
+    input, textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        margin-top: 7px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font: inherit;
+    }
+
+    textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .button {
+        display: inline-block;
+        padding: 11px 16px;
+        background: #1769aa;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        margin-top: 20px;
+        font: inherit;
+    }
+
+    .secondary {
+        background: #6c757d;
+        margin-left: 8px;
+    }
+
+    .message {
+        padding: 12px;
+        margin-bottom: 15px;
+        background: #e8f4fd;
+        border-radius: 5px;
+    }
+
+    .info {
+        background: #f1f3f5;
+        padding: 12px;
+        border-radius: 5px;
+        margin-top: 15px;
+    }
+</style>
+```
+
+</head>
+<body>
+
+```
+<h1>Log a Trip</h1>
+<p>Record a trip using your current vehicle assignment.</p>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="card">
+    <h2>Assignment Details</h2>
+
+    <div class="info">
+        <p><strong>Vehicle:</strong>
+            {{ vehicle.reg_no if vehicle else "Not available" }}
+        </p>
+
+        <p><strong>Route:</strong>
+            {{ route.name if route else "Not available" }}
+        </p>
+
+        <p><strong>From:</strong>
+            {{ route.start_point if route else "Not available" }}
+        </p>
+
+        <p><strong>To:</strong>
+            {{ route.destination if route else "Not available" }}
+        </p>
+    </div>
+
+    <form method="POST" action="{{ url_for('driver.new_trip_log') }}">
+        <label for="notes">Trip Notes (optional)</label>
+        <textarea
+            id="notes"
+            name="notes"
+            maxlength="2000"
+            placeholder="Enter any relevant trip information..."
+        ></textarea>
+
+        <button class="button" type="submit">Save Trip Log</button>
+
+        <a class="button secondary"
+           href="{{ url_for('driver.my_assignment') }}">
+            Cancel
+        </a>
+    </form>
+</section>
+```
+
+</body>
+</html>

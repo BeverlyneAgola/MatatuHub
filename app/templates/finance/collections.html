@@ -1,0 +1,147 @@
+
+
+<h1>Collections Report</h1>
+
+<p>
+    <a href="{{ url_for('finance.list_payroll') }}">
+        Payroll
+    </a>
+    |
+    <a href="{{ url_for('finance.list_claims') }}">
+        Claims
+    </a>
+    |
+    <a href="{{ url_for('finance.new_budget') }}">
+        Budgets
+    </a>
+</p>
+
+<hr>
+
+<h2>Collection Summary</h2>
+
+<table border="1" cellpadding="8" cellspacing="0">
+
+    <tbody>
+
+        <tr>
+            <th>Total Payment Records</th>
+            <td>{{ total_records }}</td>
+        </tr>
+
+        <tr>
+            <th>Total Recorded Fares (KSh)</th>
+            <td>{{ "%.2f"|format(total_fares) }}</td>
+        </tr>
+
+        <tr>
+            <th>Total Amount Given (KSh)</th>
+            <td>{{ "%.2f"|format(total_amount_given) }}</td>
+        </tr>
+
+        <tr>
+            <th>Total Change Given (KSh)</th>
+            <td>{{ "%.2f"|format(total_change_given) }}</td>
+        </tr>
+
+    </tbody>
+
+</table>
+
+<h3>Payment Status Breakdown</h3>
+
+{% if status_totals %}
+
+<table border="1" cellpadding="8" cellspacing="0">
+
+    <thead>
+        <tr>
+            <th>Status</th>
+            <th>Number of Records</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for status, count in status_totals.items() %}
+
+        <tr>
+            <td>{{ status|title }}</td>
+            <td>{{ count }}</td>
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% else %}
+
+<p>No payment statuses are available.</p>
+
+{% endif %}
+
+<hr>
+
+<h2>Payment Records</h2>
+
+{% if payment_logs %}
+
+<table border="1" cellpadding="8" cellspacing="0">
+
+    <thead>
+        <tr>
+            <th>Record ID</th>
+            <th>Conductor ID</th>
+            <th>Allocation ID</th>
+            <th>Route ID</th>
+            <th>Direction</th>
+            <th>Time Band</th>
+            <th>Fare (KSh)</th>
+            <th>Amount Given (KSh)</th>
+            <th>Change (KSh)</th>
+            <th>Payment Status</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for payment in payment_logs %}
+
+        <tr>
+
+            <td>{{ payment.id }}</td>
+
+            <td>{{ payment.conductor_id }}</td>
+
+            <td>{{ payment.allocation_id }}</td>
+
+            <td>{{ payment.route_id }}</td>
+
+            <td>{{ payment.direction }}</td>
+
+            <td>{{ payment.time_band }}</td>
+
+            <td>{{ "%.2f"|format(payment.fare_amount or 0) }}</td>
+
+            <td>{{ "%.2f"|format(payment.amount_given or 0) }}</td>
+
+            <td>{{ "%.2f"|format(payment.change_given or 0) }}</td>
+
+            <td>{{ payment.payment_status }}</td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% else %}
+
+<p>No payment records are available yet.</p>
+
+{% endif %}
+

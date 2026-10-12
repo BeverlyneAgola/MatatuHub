@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Assignment | MatatuHub</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f4f6f9;
+            color: #222;
+        }
+
+
+    h1, h2 {
+        color: #243447;
+    }
+
+    .card {
+        background: white;
+        padding: 20px;
+        margin-bottom: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .message {
+        padding: 12px;
+        margin-bottom: 15px;
+        background: #e8f4fd;
+        border-radius: 5px;
+    }
+
+    .button {
+        display: inline-block;
+        padding: 10px 15px;
+        background: #1769aa;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+    }
+
+    th, td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+
+    th {
+        background: #e9eef4;
+    }
+
+    .empty {
+        color: #666;
+    }
+</style>
+```
+
+</head>
+<body>
+
+```
+<h1>Driver Dashboard</h1>
+<p>View your current vehicle assignment and recorded trips.</p>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="card">
+    <h2>My Active Assignment</h2>
+
+    {% if allocation %}
+        <p><strong>Vehicle Registration:</strong>
+            {{ vehicle.reg_no if vehicle else "Not available" }}
+        </p>
+
+        <p><strong>Vehicle Make:</strong>
+            {{ vehicle.make if vehicle and vehicle.make else "Not specified" }}
+        </p>
+
+        <p><strong>Route:</strong>
+            {{ route.name if route else "Not available" }}
+        </p>
+
+        <p><strong>Route Start:</strong>
+            {{ route.start_point if route else "Not available" }}
+        </p>
+
+        <p><strong>Destination:</strong>
+            {{ route.destination if route else "Not available" }}
+        </p>
+
+        <p><strong>Assignment Started:</strong>
+            {{ allocation.started_at.strftime("%d %b %Y, %H:%M") if allocation.started_at else "Not available" }}
+        </p>
+
+        <a class="button" href="{{ url_for('driver.new_trip_log') }}">
+            Log a Trip
+        </a>
+    {% else %}
+        <p class="empty">You currently have no active vehicle assignment.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <h2>My Trip Logs</h2>
+
+    {% if trip_logs %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Trip ID</th>
+                    <th>Vehicle Allocation</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trip in trip_logs %}
+                    <tr>
+                        <td>{{ trip.id }}</td>
+                        <td>{{ trip.allocation_id }}</td>
+                        <td>
+                            {{ trip.start_time.strftime("%d %b %Y, %H:%M") if trip.start_time else "—" }}
+                        </td>
+                        <td>
+                            {{ trip.end_time.strftime("%d %b %Y, %H:%M") if trip.end_time else "Not recorded" }}
+                        </td>
+                        <td>{{ trip.notes or "—" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">You have not recorded any trips yet.</p>
+    {% endif %}
+</section>
+```
+
+</body>
+</html>

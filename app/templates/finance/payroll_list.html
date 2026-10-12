@@ -1,0 +1,175 @@
+
+
+{% block content %}
+
+<h1>Payroll Management</h1>
+
+<p>
+    <a href="{{ url_for('finance.new_payroll') }}">
+        Generate New Payroll
+    </a>
+    |
+    <a href="{{ url_for('finance.list_claims') }}">
+        Claims
+    </a>
+    |
+    <a href="{{ url_for('finance.new_budget') }}">
+        Budgets
+    </a>
+    |
+    <a href="{{ url_for('finance.collections_report') }}">
+        Collections
+    </a>
+</p>
+
+<hr>
+
+<h2>Filter Payrolls</h2>
+
+<form method="GET" action="{{ url_for('finance.list_payroll') }}">
+
+    <label for="period">Payroll Period</label>
+
+    <input
+        type="text"
+        id="period"
+        name="period"
+        placeholder="2026-10"
+        value="{{ selected_period }}"
+    >
+
+    <label for="role_id">Employee Role</label>
+
+    <select id="role_id" name="role_id">
+
+        <option value="">All Roles</option>
+
+        {% for role in roles %}
+
+            <option
+                value="{{ role.id }}"
+                {% if selected_role_id|string == role.id|string %}
+                    selected
+                {% endif %}
+            >
+                {{ role.name }}
+            </option>
+
+        {% endfor %}
+
+    </select>
+
+    <button type="submit">Filter</button>
+
+    <a href="{{ url_for('finance.list_payroll') }}">
+        Clear Filters
+    </a>
+
+</form>
+
+<hr>
+
+<h2>Payroll Records</h2>
+
+{% if payrolls %}
+
+<table border="1" cellpadding="8" cellspacing="0">
+
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Employee</th>
+            <th>Period</th>
+            <th>Basic Salary</th>
+            <th>Allowance</th>
+            <th>Deductions</th>
+            <th>Net Pay</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for payroll in payrolls %}
+
+        <tr>
+            <td>{{ payroll.id }}</td>
+
+            <td>
+                {% if payroll.employee %}
+                    {{ payroll.employee.first_name }}
+                    {{ payroll.employee.last_name }}
+                {% else %}
+                    Employee #{{ payroll.employee_id }}
+                {% endif %}
+            </td>
+
+            <td>{{ payroll.period }}</td>
+
+            <td>{{ "%.2f"|format(payroll.basic_salary) }}</td>
+
+            <td>{{ "%.2f"|format(payroll.allowance or 0) }}</td>
+
+            <td>
+                <ul>
+                    {% for deduction in deduction_map[payroll.id] %}
+
+                        <li>
+                            {{ deduction.type }}:
+                            {{ "%.2f"|format(deduction.amount) }}
+                        </li>
+
+                    {% else %}
+
+                        <li>No deductions</li>
+
+                    {% endfor %}
+                </ul>
+            </td>
+
+            <td>{{ "%.2f"|format(payroll.net_pay or 0) }}</td>
+
+            <td>{{ payroll.status|title }}</td>
+
+            <td>
+
+                {% if payroll.status == "draft" %}
+
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'finance.issue_payroll',
+                        payroll_id=payroll.id
+                    ) }}"
+                >
+
+                    <button type="submit">
+                        Issue Payroll
+                    </button>
+
+                </form>
+
+                {% else %}
+
+                    Locked
+
+                {% endif %}
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% else %}
+
+<p>No payroll records found.</p>
+
+{% endif %}
+
+{% endblock %}

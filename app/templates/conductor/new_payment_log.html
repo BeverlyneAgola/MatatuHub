@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Payment | MatatuHub</title>
+
+```
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 30px;
+        background: #f4f6f9;
+        color: #222;
+    }
+
+    h1, h2 {
+        color: #243447;
+    }
+
+    .card {
+        max-width: 650px;
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    label {
+        display: block;
+        margin-top: 18px;
+        font-weight: bold;
+    }
+
+    input, select {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px;
+        margin-top: 7px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font: inherit;
+    }
+
+    .button {
+        display: inline-block;
+        padding: 11px 16px;
+        background: #1769aa;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        margin-top: 22px;
+        font: inherit;
+    }
+
+    .secondary {
+        background: #6c757d;
+        margin-left: 8px;
+    }
+
+    .message {
+        background: #e8f4fd;
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+    }
+
+    .info {
+        background: #f1f3f5;
+        padding: 14px;
+        border-radius: 5px;
+        margin-top: 15px;
+    }
+
+    .empty {
+        color: #666;
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+```
+<h1>Record Commuter Payment</h1>
+<p>Enter the amount received. MatatuHub will calculate the fare and change.</p>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="card">
+
+    <h2>Current Assignment</h2>
+
+    <div class="info">
+        <p>
+            <strong>Vehicle:</strong>
+            {{ vehicle.reg_no if vehicle else "Not available" }}
+        </p>
+
+        <p>
+            <strong>Route:</strong>
+            {{ route.name if route else "Not available" }}
+        </p>
+
+        <p>
+            <strong>From:</strong>
+            {{ route.start_point if route else "Not available" }}
+        </p>
+
+        <p>
+            <strong>Destination:</strong>
+            {{ route.destination if route else "Not available" }}
+        </p>
+
+        <p>
+            <strong>Current Time Band:</strong>
+            {{ time_band|replace("_", "-")|title }}
+        </p>
+    </div>
+
+    {% if directions %}
+
+        <form method="POST"
+              action="{{ url_for('conductor.new_payment_log') }}">
+
+            <label for="direction">Fare Direction</label>
+
+            <select id="direction" name="direction" required>
+                <option value="">-- Select direction --</option>
+
+                {% for direction in directions %}
+                    <option value="{{ direction }}">
+                        {{ direction }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="commuter_phone">Commuter's Phone Number</label>
+
+            <input
+                type="tel"
+                id="commuter_phone"
+                name="commuter_phone"
+                maxlength="20"
+                required
+                placeholder="e.g. 0712345678"
+            >
+
+            <label for="amount_given">Amount Received (KSh)</label>
+
+            <input
+                type="number"
+                id="amount_given"
+                name="amount_given"
+                min="0.01"
+                step="0.01"
+                required
+                placeholder="Enter amount received"
+            >
+
+            <button class="button" type="submit">
+                Calculate and Record Payment
+            </button>
+
+            <a class="button secondary"
+               href="{{ url_for('conductor.my_assignment') }}">
+                Cancel
+            </a>
+
+        </form>
+
+    {% else %}
+
+        <p class="empty">
+            No currently effective fares are configured for this route
+            and time band. Contact Operations to check the fare records.
+        </p>
+
+        <a class="button"
+           href="{{ url_for('conductor.my_assignment') }}">
+            Back to Dashboard
+        </a>
+
+    {% endif %}
+
+</section>
+```
+
+</body>
+</html>
