@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Conductors - MatatuHub</title>
+</head>
+<body>
+
+    <h1>Active Conductors</h1>
+
+    <p>
+        <a href="{{ url_for('conductor_operations.index') }}">
+            Back to Conductor Operations Dashboard
+        </a>
+    </p>
+
+    {% if conductors %}
+        <table border="1" cellpadding="8">
+            <thead>
+                <tr>
+                    <th>Staff ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Assignment Status</th>
+                    <th>Vehicle</th>
+                    <th>Route</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for conductor in conductors %}
+                    {% set allocation = allocations_by_conductor.get(conductor.id) %}
+
+                    <tr>
+                        <td>{{ conductor.staff_id }}</td>
+
+                        <td>
+                            {{ conductor.first_name }}
+                            {{ conductor.last_name }}
+                        </td>
+
+                        <td>{{ conductor.phone or 'Not provided' }}</td>
+
+                        {% if allocation %}
+                            <td>Assigned</td>
+
+                            <td>
+                                {% set vehicle = vehicles.get(allocation.vehicle_id) %}
+                                {{ vehicle.reg_no if vehicle else 'Unavailable' }}
+                            </td>
+
+                            <td>
+                                {% set route = routes.get(allocation.route_id) %}
+                                {{ route.name if route else 'Unavailable' }}
+                            </td>
+                        {% else %}
+                            <td>Not Assigned</td>
+                            <td>—</td>
+                            <td>—</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No active conductors were found.</p>
+    {% endif %}
+
+    <p>
+        <a href="{{ url_for('conductor_operations.list_payment_logs') }}">
+            View Payment Logs
+        </a>
+    </p>
+
+</body>
+</html>

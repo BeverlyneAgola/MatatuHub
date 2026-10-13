@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Drivers - MatatuHub</title>
+</head>
+<body>
+
+    <h1>Active Drivers</h1>
+
+    <p>
+        <a href="{{ url_for('driver_operations.index') }}">
+            Back to Driver Operations Dashboard
+        </a>
+    </p>
+
+    {% if drivers %}
+        <table border="1" cellpadding="8">
+            <thead>
+                <tr>
+                    <th>Staff ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>License Number</th>
+                    <th>Assignment Status</th>
+                    <th>Vehicle</th>
+                    <th>Route</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for driver in drivers %}
+                    {% set allocation = allocations_by_driver.get(driver.id) %}
+
+                    <tr>
+                        <td>{{ driver.staff_id }}</td>
+                        <td>{{ driver.first_name }} {{ driver.last_name }}</td>
+                        <td>{{ driver.phone or 'Not provided' }}</td>
+                        <td>{{ driver.driver_license_no or 'Not provided' }}</td>
+
+                        {% if allocation %}
+                            <td>Assigned</td>
+                            <td>
+                                {% set vehicle = vehicles.get(allocation.vehicle_id) %}
+                                {{ vehicle.reg_no if vehicle else 'Unavailable' }}
+                            </td>
+                            <td>
+                                {% set route = routes.get(allocation.route_id) %}
+                                {{ route.name if route else 'Unavailable' }}
+                            </td>
+                        {% else %}
+                            <td>Not Assigned</td>
+                            <td>—</td>
+                            <td>—</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No active drivers were found.</p>
+    {% endif %}
+
+    <p>
+        <a href="{{ url_for('driver_operations.list_trip_logs') }}">
+            View Trip Logs
+        </a>
+    </p>
+
+</body>
+</html>

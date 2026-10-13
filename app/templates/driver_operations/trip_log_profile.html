@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trip Details - MatatuHub</title>
+</head>
+<body>
+
+    <h1>Trip Record #{{ trip_log.id }}</h1>
+
+    <p>
+        <a href="{{ url_for('driver_operations.list_trip_logs') }}">
+            Back to Trip Logs
+        </a>
+    </p>
+
+    <h2>Driver Information</h2>
+
+    {% if driver %}
+        <p>
+            <strong>Staff ID:</strong>
+            {{ driver.staff_id }}
+        </p>
+
+        <p>
+            <strong>Name:</strong>
+            {{ driver.first_name }} {{ driver.last_name }}
+        </p>
+    {% else %}
+        <p>Driver information is unavailable.</p>
+    {% endif %}
+
+    <h2>Assignment Information</h2>
+
+    {% if allocation %}
+        <p>
+            <strong>Allocation ID:</strong>
+            {{ allocation.id }}
+        </p>
+
+        <p>
+            <strong>Vehicle:</strong>
+            {{ vehicle.reg_no if vehicle else 'Unavailable' }}
+        </p>
+
+        <p>
+            <strong>Route:</strong>
+            {{ route.name if route else 'Unavailable' }}
+        </p>
+    {% else %}
+        <p>Assignment information is unavailable.</p>
+    {% endif %}
+
+    <h2>Trip Information</h2>
+
+    <p>
+        <strong>Start Time:</strong>
+        {{ trip_log.start_time.strftime('%Y-%m-%d %H:%M') if trip_log.start_time else '—' }}
+    </p>
+
+    <p>
+        <strong>End Time:</strong>
+        {{ trip_log.end_time.strftime('%Y-%m-%d %H:%M') if trip_log.end_time else 'In Progress' }}
+    </p>
+
+    <p>
+        <strong>Notes:</strong>
+        {{ trip_log.notes or 'No notes recorded.' }}
+    </p>
+
+</body>
+</html>

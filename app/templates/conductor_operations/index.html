@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Conductor Operations Dashboard - MatatuHub</title>
+</head>
+<body>
+
+    <h1>Conductor Operations Supervisor Dashboard</h1>
+
+    <p>Welcome to Conductor Operations monitoring.</p>
+
+    <h2>Overview</h2>
+
+    <table border="1" cellpadding="8">
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Active Conductors</td>
+                <td>{{ conductors|length }}</td>
+            </tr>
+            <tr>
+                <td>Active Conductor Allocations</td>
+                <td>{{ active_allocations }}</td>
+            </tr>
+            <tr>
+                <td>Total Payment Logs</td>
+                <td>{{ total_payment_logs }}</td>
+            </tr>
+            <tr>
+                <td>Pending Payment Records</td>
+                <td>{{ pending_payments }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Navigation</h2>
+
+    <ul>
+        <li>
+            <a href="{{ url_for('conductor_operations.list_conductors') }}">
+                View Conductors
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('conductor_operations.list_payment_logs') }}">
+                View Payment Logs
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+        </li>
+    </ul>
+
+</body>
+</html>

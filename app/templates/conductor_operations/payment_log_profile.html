@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Details - MatatuHub</title>
+</head>
+<body>
+
+    <h1>Payment Record #{{ payment_log.id }}</h1>
+
+    <p>
+        <a href="{{ url_for('conductor_operations.list_payment_logs') }}">
+            Back to Payment Logs
+        </a>
+    </p>
+
+    <h2>Conductor Information</h2>
+
+    {% if conductor %}
+        <p>
+            <strong>Staff ID:</strong>
+            {{ conductor.staff_id }}
+        </p>
+
+        <p>
+            <strong>Name:</strong>
+            {{ conductor.first_name }} {{ conductor.last_name }}
+        </p>
+    {% else %}
+        <p>Conductor information is unavailable.</p>
+    {% endif %}
+
+    <h2>Assignment Information</h2>
+
+    {% if allocation %}
+        <p>
+            <strong>Allocation ID:</strong>
+            {{ allocation.id }}
+        </p>
+    {% else %}
+        <p>Allocation information is unavailable.</p>
+    {% endif %}
+
+    <p>
+        <strong>Vehicle:</strong>
+        {{ vehicle.reg_no if vehicle else 'Unavailable' }}
+    </p>
+
+    <p>
+        <strong>Route:</strong>
+        {{ route.name if route else 'Unavailable' }}
+    </p>
+
+    <h2>Payment Information</h2>
+
+    <p>
+        <strong>Direction:</strong>
+        {{ payment_log.direction }}
+    </p>
+
+    <p>
+        <strong>Time Band:</strong>
+        {{ payment_log.time_band }}
+    </p>
+
+    <p>
+        <strong>Fare Amount:</strong>
+        {{ payment_log.fare_amount }}
+    </p>
+
+    <p>
+        <strong>Amount Given:</strong>
+        {{ payment_log.amount_given }}
+    </p>
+
+    <p>
+        <strong>Change Given:</strong>
+        {{ payment_log.change_given }}
+    </p>
+
+    <p>
+        <strong>Payment Status:</strong>
+        {{ payment_log.payment_status }}
+    </p>
+
+    <p>
+        <strong>Transaction Reference:</strong>
+        {{ payment_log.transaction_ref or 'Not available' }}
+    </p>
+
+    <p>
+        <strong>Recorded At:</strong>
+        {{ payment_log.created_at.strftime('%Y-%m-%d %H:%M') if payment_log.created_at else '—' }}
+    </p>
+
+</body>
+</html>

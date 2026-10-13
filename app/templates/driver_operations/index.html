@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Driver Operations Dashboard - MatatuHub</title>
+</head>
+<body>
+
+    <h1>Driver Operations Supervisor Dashboard</h1>
+
+    <p>Welcome to Driver Operations monitoring.</p>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div>
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <h2>Overview</h2>
+
+    <table border="1" cellpadding="8">
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Active Drivers</td>
+                <td>{{ drivers|length }}</td>
+            </tr>
+            <tr>
+                <td>Active Driver Allocations</td>
+                <td>{{ active_allocations }}</td>
+            </tr>
+            <tr>
+                <td>Driver Trip Logs</td>
+                <td>{{ total_trip_logs }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Navigation</h2>
+
+    <ul>
+        <li>
+            <a href="{{ url_for('driver_operations.list_drivers') }}">
+                View Drivers
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('driver_operations.list_trip_logs') }}">
+                View Driver Trip Logs
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+        </li>
+    </ul>
+
+</body>
+</html>
