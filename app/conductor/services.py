@@ -2,9 +2,28 @@ from datetime import datetime, date
 from decimal import Decimal, InvalidOperation
 
 from app.extensions import db
-from app.models.fleet import Allocation
+from app.models.fleet import Allocation, Vehicle
 from app.models.operations import Fare
+from app.models.operations import Route
 from app.models.driver_conductor import PaymentLog
+
+
+def get_conductor_assignment_details(allocation):
+    """Return the vehicle and route attached to an allocation."""
+    return (
+        db.session.get(Vehicle, allocation.vehicle_id),
+        db.session.get(Route, allocation.route_id),
+    )
+
+
+def get_conductor_payment_logs(employee_id):
+    return (
+        PaymentLog.query
+        .filter_by(conductor_id=employee_id)
+        .order_by(PaymentLog.created_at.desc())
+        .all()
+    )
+
 
 def detect_time_band():
 
@@ -155,5 +174,7 @@ amount_given
         payment_status="pending"
     )
 
-    return payment, None
+    db.session.add(payment)
+    db.session.commit()
 
+    return payment, None

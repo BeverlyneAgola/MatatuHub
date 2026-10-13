@@ -1,7 +1,44 @@
 from datetime import date, timedelta
 
 from app.extensions import db
-from app.models import Fare
+from app.models import Fare, Route
+
+
+def list_routes():
+    return Route.query.order_by(Route.name.asc()).all()
+
+
+def create_route(name, start_point, destination):
+    route = Route(
+        name=name,
+        start_point=start_point,
+        destination=destination,
+        status="active",
+    )
+    db.session.add(route)
+    db.session.commit()
+    return route
+
+
+def get_route(route_id):
+    return db.session.get(Route, route_id)
+
+
+def get_fare(fare_id):
+    return db.session.get(Fare, fare_id)
+
+
+def list_route_fares(route_id):
+    return (
+        Fare.query
+        .filter_by(route_id=route_id)
+        .order_by(
+            Fare.direction.asc(),
+            Fare.time_band.asc(),
+            Fare.effective_from.desc()
+        )
+        .all()
+    )
 
 
 def get_current_fare(

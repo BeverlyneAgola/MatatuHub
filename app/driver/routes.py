@@ -9,15 +9,12 @@ from flask import (
 
 from flask_login import login_required, current_user
 
-from app.extensions import db
-from app.models.fleet import Allocation, Vehicle
-from app.models.operations import Route
-from app.models.driver_conductor import TripLog
 from app.auth.decorators import role_required
 from app.utils.audit import log_action
 
 from app.driver.services import (
     get_driver_active_assignment,
+    get_driver_assignment_details,
     get_driver_trip_logs,
     create_driver_trip_log,
 )
@@ -44,19 +41,11 @@ def my_assignment():
 
     allocation = get_driver_active_assignment(employee_id)
 
-    vehicle = None
-    route = None
-
-    if allocation:
-        vehicle = db.session.get(
-            Vehicle,
-            allocation.vehicle_id
-        )
-
-        route = db.session.get(
-            Route,
-            allocation.route_id
-        )
+    vehicle, route = (
+        get_driver_assignment_details(allocation)
+        if allocation
+        else (None, None)
+    )
 
     trip_logs = get_driver_trip_logs(employee_id)
 
@@ -114,9 +103,6 @@ def new_trip_log():
                 url_for("driver.my_assignment")
             )
 
-        db.session.add(trip)
-        db.session.commit()
-
         log_action(
             "Created driver trip log",
             "trip_logs",
@@ -129,15 +115,7 @@ def new_trip_log():
             url_for("driver.my_assignment")
         )
 
-    vehicle = db.session.get(
-        Vehicle,
-        allocation.vehicle_id
-    )
-
-    route = db.session.get(
-        Route,
-        allocation.route_id
-    )
+    vehicle, route = get_driver_assignment_details(allocation)
 
     return render_template(
         "driver/new_trip_log.html",

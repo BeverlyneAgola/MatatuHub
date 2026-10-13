@@ -1,15 +1,22 @@
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, abort, render_template, redirect, url_for, flash, request
 from flask_login import login_required
 
 from app.extensions import db
-from app.models import Route, Fare
 from app.auth.decorators import role_required
 from app.utils.audit import log_action
 from app.operations.forms import validate_fare_data
-from app.operations.services import create_fare, update_fare
+from app.operations.services import (
+    create_fare,
+    create_route,
+    get_fare,
+    get_route,
+    list_route_fares,
+    list_routes as fetch_routes,
+    update_fare,
+)
 
 
 operations_bp = Blueprint(
@@ -28,7 +35,7 @@ operations_bp = Blueprint(
 @role_required("Operations Manager", "Operations Officer")
 def list_routes():
 
-    routes = Route.query.order_by(Route.name.asc()).all()
+    routes = fetch_routes()
 
     return render_template(
         "operations/routes.html",
@@ -51,15 +58,11 @@ def new_route():
             flash("All route fields are required.")
             return redirect(url_for("operations.new_route"))
 
-        route = Route(
+        route = create_route(
             name=name,
             start_point=start_point,
             destination=destination,
-            status="active"
         )
-
-        db.session.add(route)
-        db.session.commit()
 
         log_action(
             "Created route",
@@ -84,7 +87,10 @@ def new_route():
 )
 def view_route(id):
 
-    route = Route.query.get_or_404(id)
+    route = get_route(id)
+
+    if route is None:
+        abort(404)
 
     return render_template(
         "operations/route_profile.html",
@@ -106,18 +112,12 @@ def view_route(id):
 )
 def list_fares(route_id):
 
-    route = Route.query.get_or_404(route_id)
+    route = get_route(route_id)
 
-    fares = (
-        Fare.query
-        .filter_by(route_id=route.id)
-        .order_by(
-            Fare.direction.asc(),
-            Fare.time_band.asc(),
-            Fare.effective_from.desc()
-        )
-        .all()
-    )
+    if route is None:
+        abort(404)
+
+    fares = list_route_fares(route.id)
 
     return render_template(
         "operations/fares.html",
@@ -137,7 +137,10 @@ def list_fares(route_id):
 )
 def new_fare(route_id):
 
-    route = Route.query.get_or_404(route_id)
+    route = get_route(route_id)
+
+    if route is None:
+        abort(404)
 
     if request.method == "POST":
 
@@ -237,11 +240,17 @@ def new_fare(route_id):
 )
 def edit_fare(fare_id):
 
-    fare = Fare.query.get_or_404(fare_id)
+    fare = get_fare(fare_id)
 
-    route = Route.query.get_or_404(
+    if fare is None:
+        abort(404)
+
+    route = get_route(
         fare.route_id
     )
+
+    if route is None:
+        abort(404)
 
     if request.method == "POST":
 

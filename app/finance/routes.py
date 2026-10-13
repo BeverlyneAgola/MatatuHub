@@ -1,9 +1,7 @@
-from datetime import datetime
-from decimal import Decimal, InvalidOperation
-import re
-
 from flask import (
     Blueprint,
+    abort,
+    current_app,
     render_template,
     redirect,
     url_for,
@@ -13,22 +11,23 @@ from flask import (
 
 from flask_login import login_required, current_user
 
-from sqlalchemy import func
-
-from app.extensions import db
 from app.auth.decorators import role_required
 from app.utils.audit import log_action
-
-from app.models.finance import (
-    Payroll,
-    PayrollDeduction,
-    Claim,
-    Compensation,
-    BudgetAllocation,
+from app.finance.services import (
+    approve_claim as approve_claim_service,
+    create_budget_allocation,
+    create_payroll,
+    get_budget_form_data,
+    get_claim,
+    get_collections_report,
+    get_current_employee_id,
+    get_payroll,
+    issue_payroll as issue_payroll_service,
+    list_claims as fetch_claims,
+    list_employees,
+    list_payroll as fetch_payroll,
+    reject_claim as reject_claim_service,
 )
-
-from app.models.core import Employee, Department, Role
-from app.models.driver_conductor import PaymentLog
 
 
 finance_bp = Blueprint(
@@ -66,88 +65,6 @@ BUDGET_ROLES = (
 
 
 # ============================================================
-# HELPER FUNCTIONS
-# ============================================================
-
-def get_current_employee_id():
-    """
-    Return the employee ID associated with the logged-in user.
-
-    A valid Finance action must be associated with an employee.
-    """
-
-    employee = current_user.employee
-
-    if employee is None:
-        raise ValueError(
-            "Your user account is not associated with an employee."
-        )
-
-    return employee.id
-
-
-def parse_money(value, field_name):
-    """
-    Convert a submitted monetary value to Decimal.
-
-    Reject invalid and negative monetary amounts.
-    """
-
-    try:
-        amount = Decimal(str(value).strip())
-    except (InvalidOperation, ValueError, TypeError):
-        raise ValueError(
-            f"{field_name} must be a valid monetary amount."
-        )
-
-    if not amount.is_finite():
-        raise ValueError(
-            f"{field_name} must be a finite monetary amount."
-        )
-
-    if amount < 0:
-        raise ValueError(
-            f"{field_name} cannot be negative."
-        )
-
-    if amount.as_tuple().exponent < -2:
-        raise ValueError(
-            f"{field_name} cannot have more than two decimal places."
-        )
-
-    return amount
-
-
-def validate_period(period):
-    """
-    Validate a payroll or budget period in YYYY-MM format.
-    """
-
-    if not re.fullmatch(
-        r"\d{4}-(0[1-9]|1[0-2])",
-        period or "",
-    ):
-        raise ValueError(
-            "Enter the period in YYYY-MM format, for example 2026-10."
-        )
-
-    return period
-
-
-def get_payroll_deductions(payroll_id):
-    """
-    Retrieve deduction lines associated with a payroll.
-    """
-
-    return (
-        PayrollDeduction.query
-        .filter_by(payroll_id=payroll_id)
-        .order_by(PayrollDeduction.id.asc())
-        .all()
-    )
-
-
-# ============================================================
 # PAYROLL LISTING AND FILTERING
 # ============================================================
 
@@ -155,19 +72,9 @@ def get_payroll_deductions(payroll_id):
 @login_required
 @role_required(*FINANCE_ROLES)
 def list_payroll():
-
-    query = Payroll.query
-
-    # Filter by payroll period.
     period = request.args.get("period", "").strip()
-
-    if period:
-        query = query.filter(
-            Payroll.period == period
-        )
-
-    # Filter by employee role.
     role_id = request.args.get("role_id", "").strip()
+    selected_role_id = None
 
     if role_id:
         try:
@@ -176,43 +83,10 @@ def list_payroll():
             flash("Invalid role filter.", "error")
             return redirect(url_for("finance.list_payroll"))
 
-        employee_ids = [
-            employee_id
-            for (employee_id,) in (
-                db.session.query(Employee.id)
-                .filter(Employee.role_id == selected_role_id)
-                .all()
-            )
-        ]
-
-        query = query.filter(
-            Payroll.employee_id.in_(employee_ids)
-        )
-
-    payrolls = (
-        query
-        .order_by(
-            Payroll.period.desc(),
-            Payroll.id.desc(),
-        )
-        .all()
+    payrolls, roles, deduction_map = fetch_payroll(
+        period=period,
+        role_id=selected_role_id,
     )
-
-    roles = (
-        Role.query
-        .join(Department, Role.department_id == Department.id)
-        .filter(Department.name == "Finance")
-        .order_by(Role.name.asc())
-        .all()
-    )
-
-    # Prepare deduction lines for display.
-    deduction_map = {}
-
-    for payroll in payrolls:
-        deduction_map[payroll.id] = get_payroll_deductions(
-            payroll.id
-        )
 
     return render_template(
         "finance/payroll_list.html",
@@ -232,156 +106,19 @@ def list_payroll():
 @login_required
 @role_required(*PAYROLL_ROLES)
 def new_payroll():
-
-    employees = (
-        Employee.query
-        .order_by(
-            Employee.first_name.asc(),
-            Employee.last_name.asc(),
-        )
-        .all()
-    )
+    employees = list_employees()
 
     if request.method == "POST":
-
         try:
-            employee_id = int(
-                request.form.get("employee_id", "")
+            payroll = create_payroll(
+                employee_id=request.form.get("employee_id"),
+                period=request.form.get("period", ""),
+                basic_salary=request.form.get("basic_salary"),
+                allowance=request.form.get("allowance", "0"),
+                deduction_types=request.form.getlist("deduction_type"),
+                deduction_amounts=request.form.getlist("deduction_amount"),
+                generated_by=get_current_employee_id(current_user.employee),
             )
-
-            employee = Employee.query.get_or_404(
-                employee_id
-            )
-
-            period = validate_period(
-                request.form.get("period", "").strip()
-            )
-
-            basic_salary = parse_money(
-                request.form.get("basic_salary"),
-                "Basic salary",
-            )
-
-            allowance = parse_money(
-                request.form.get("allowance", "0"),
-                "Allowance",
-            )
-
-            if basic_salary <= 0:
-                raise ValueError(
-                    "Basic salary must be greater than zero."
-                )
-
-            # Prevent multiple payroll records for the same
-            # employee and period through this route.
-            existing_payroll = Payroll.query.filter_by(
-                employee_id=employee.id,
-                period=period,
-            ).first()
-
-            if existing_payroll:
-                raise ValueError(
-                    "A payroll already exists for this employee "
-                    f"for {period}."
-                )
-
-            deduction_types = request.form.getlist(
-                "deduction_type"
-            )
-
-            deduction_amounts = request.form.getlist(
-                "deduction_amount"
-            )
-
-            if len(deduction_types) != len(deduction_amounts):
-                raise ValueError(
-                    "Each deduction type must have a corresponding amount."
-                )
-
-            deductions = []
-            total_deductions = Decimal("0.00")
-
-            for deduction_type, raw_amount in zip(
-                deduction_types,
-                deduction_amounts,
-            ):
-
-                deduction_type = deduction_type.strip()
-
-                # Ignore completely empty deduction rows.
-                if not deduction_type and not raw_amount.strip():
-                    continue
-
-                if not deduction_type:
-                    raise ValueError(
-                        "Select a type for every deduction entered."
-                    )
-
-                if not raw_amount.strip():
-                    raise ValueError(
-                        "Enter an amount for every deduction entered."
-                    )
-
-                if len(deduction_type) > 30:
-                    raise ValueError(
-                        "A deduction type cannot exceed 30 characters."
-                    )
-
-                amount = parse_money(
-                    raw_amount,
-                    f"{deduction_type} deduction",
-                )
-
-                if amount <= 0:
-                    raise ValueError(
-                        "Deduction amounts must be greater than zero."
-                    )
-
-                deductions.append(
-                    {
-                        "type": deduction_type,
-                        "amount": amount,
-                    }
-                )
-
-                total_deductions += amount
-
-            gross_pay = basic_salary + allowance
-
-            if total_deductions > gross_pay:
-                raise ValueError(
-                    "Total deductions cannot exceed gross pay."
-                )
-
-            net_pay = gross_pay - total_deductions
-
-            # Create the draft payroll.
-            payroll = Payroll(
-                employee_id=employee.id,
-                period=period,
-                basic_salary=basic_salary,
-                allowance=allowance,
-                net_pay=net_pay,
-                status="draft",
-                generated_by=get_current_employee_id(),
-            )
-
-            db.session.add(payroll)
-
-            # Assign a payroll ID before creating deduction lines.
-            db.session.flush()
-
-            for deduction in deductions:
-
-                db.session.add(
-                    PayrollDeduction(
-                        payroll_id=payroll.id,
-                        type=deduction["type"],
-                        amount=deduction["amount"],
-                    )
-                )
-
-            db.session.commit()
 
             log_action(
                 "Generated payroll",
@@ -390,7 +127,7 @@ def new_payroll():
             )
 
             flash(
-                f"Draft payroll generated successfully for {period}.",
+                f"Draft payroll generated successfully for {payroll.period}.",
                 "success",
             )
 
@@ -399,16 +136,9 @@ def new_payroll():
             )
 
         except ValueError as error:
-            db.session.rollback()
             flash(str(error), "error")
 
         except Exception:
-            db.session.rollback()
-
-            # Log the technical error in the application logs
-            # rather than displaying database details to the user.
-            from flask import current_app
-
             current_app.logger.exception(
                 "Payroll generation failed."
             )
@@ -436,23 +166,14 @@ def new_payroll():
 @role_required(*PAYROLL_ROLES)
 def issue_payroll(payroll_id):
 
-    payroll = Payroll.query.get_or_404(
-        payroll_id
-    )
-
-    if payroll.status != "draft":
-        flash(
-            "Only draft payrolls can be issued.",
-            "error",
-        )
-
-        return redirect(
-            url_for("finance.list_payroll")
-        )
-
-    payroll.status = "issued"
-
-    db.session.commit()
+    payroll = get_payroll(payroll_id)
+    if payroll is None:
+        abort(404)
+    try:
+        issue_payroll_service(payroll)
+    except ValueError as error:
+        flash(str(error), "error")
+        return redirect(url_for("finance.list_payroll"))
 
     log_action(
         "Issued payroll",
@@ -484,8 +205,6 @@ def list_claims():
         "pending",
     ).strip().lower()
 
-    query = Claim.query
-
     allowed_statuses = {
         "pending",
         "approved",
@@ -501,26 +220,7 @@ def list_claims():
 
         status = "pending"
 
-    if status != "all":
-        query = query.filter(
-            func.lower(Claim.status) == status
-        )
-
-    claims = (
-        query
-        .order_by(Claim.created_at.desc())
-        .all()
-    )
-
-    # Used to display any existing compensation records.
-    compensation_map = {}
-
-    for claim in claims:
-        compensation_map[claim.id] = (
-            Compensation.query
-            .filter_by(claim_id=claim.id)
-            .first()
-        )
+    claims, compensation_map = fetch_claims(status)
 
     return render_template(
         "finance/claims_list.html",
@@ -542,75 +242,15 @@ def list_claims():
 @role_required(*CLAIM_REVIEW_ROLES)
 def approve_claim(claim_id):
 
-    claim = Claim.query.get_or_404(
-        claim_id
-    )
-
-    if claim.status != "pending":
-        flash(
-            "Only pending claims can be approved.",
-            "error",
-        )
-
-        return redirect(
-            url_for("finance.list_claims")
-        )
-
-    compensation_amount = None
-
-    if (claim.category or "").strip().lower() == "accident":
-
-        existing_compensation = Compensation.query.filter_by(
-            claim_id=claim.id
-        ).first()
-
-        if existing_compensation:
-            flash(
-                "A compensation record already exists for this claim.",
-                "error",
-            )
-
-            return redirect(
-                url_for("finance.list_claims")
-            )
-
-        try:
-            compensation_amount = parse_money(
-                request.form.get(
-                    "amount",
-                    str(claim.amount_requested or ""),
-                ),
-                "Compensation amount",
-            )
-
-            if compensation_amount <= 0:
-                raise ValueError(
-                    "Compensation must be greater than zero."
-                )
-
-        except ValueError as error:
-            flash(str(error), "error")
-
-            return redirect(
-                url_for("finance.list_claims")
-            )
-
+    claim = get_claim(claim_id)
+    if claim is None:
+        abort(404)
     try:
-        claim.status = "approved"
-        claim.reviewed_by = get_current_employee_id()
-        claim.reviewed_at = datetime.utcnow()
-
-        if compensation_amount is not None:
-
-            compensation = Compensation(
-                claim_id=claim.id,
-                amount=compensation_amount,
-                approved_by=claim.reviewed_by,
-            )
-
-            db.session.add(compensation)
-
-        db.session.commit()
+        approve_claim_service(
+            claim,
+            get_current_employee_id(current_user.employee),
+            compensation_amount=request.form.get("amount"),
+        )
 
         log_action(
             "Approved claim",
@@ -623,11 +263,9 @@ def approve_claim(claim_id):
             "success",
         )
 
+    except ValueError as error:
+        flash(str(error), "error")
     except Exception:
-        db.session.rollback()
-
-        from flask import current_app
-
         current_app.logger.exception(
             "Claim approval failed."
         )
@@ -654,25 +292,17 @@ def approve_claim(claim_id):
 @role_required(*CLAIM_REVIEW_ROLES)
 def reject_claim(claim_id):
 
-    claim = Claim.query.get_or_404(
-        claim_id
-    )
-
-    if claim.status != "pending":
-        flash(
-            "Only pending claims can be rejected.",
-            "error",
+    claim = get_claim(claim_id)
+    if claim is None:
+        abort(404)
+    try:
+        reject_claim_service(
+            claim,
+            get_current_employee_id(current_user.employee),
         )
-
-        return redirect(
-            url_for("finance.list_claims")
-        )
-
-    claim.status = "rejected"
-    claim.reviewed_by = get_current_employee_id()
-    claim.reviewed_at = datetime.utcnow()
-
-    db.session.commit()
+    except ValueError as error:
+        flash(str(error), "error")
+        return redirect(url_for("finance.list_claims"))
 
     log_action(
         "Rejected claim",
@@ -702,55 +332,17 @@ def reject_claim(claim_id):
 @role_required(*BUDGET_ROLES)
 def new_budget():
 
-    departments = (
-        Department.query
-        .order_by(Department.name.asc())
-        .all()
-    )
-
-    allocations = (
-        BudgetAllocation.query
-        .order_by(
-            BudgetAllocation.period.desc(),
-            BudgetAllocation.id.desc(),
-        )
-        .all()
-    )
+    departments, allocations = get_budget_form_data()
 
     if request.method == "POST":
 
         try:
-            department_id = int(
-                request.form.get("department_id", "")
+            allocation = create_budget_allocation(
+                department_id=request.form.get("department_id"),
+                amount=request.form.get("amount"),
+                period=request.form.get("period", ""),
+                allocated_by=get_current_employee_id(current_user.employee),
             )
-
-            department = Department.query.get_or_404(
-                department_id
-            )
-
-            amount = parse_money(
-                request.form.get("amount"),
-                "Budget amount",
-            )
-
-            period = validate_period(
-                request.form.get("period", "").strip()
-            )
-
-            if amount <= 0:
-                raise ValueError(
-                    "Budget amount must be greater than zero."
-                )
-
-            allocation = BudgetAllocation(
-                department_id=department.id,
-                amount=amount,
-                period=period,
-                allocated_by=get_current_employee_id(),
-            )
-
-            db.session.add(allocation)
-            db.session.commit()
 
             log_action(
                 "Created budget allocation",
@@ -768,14 +360,9 @@ def new_budget():
             )
 
         except ValueError as error:
-            db.session.rollback()
             flash(str(error), "error")
 
         except Exception:
-            db.session.rollback()
-
-            from flask import current_app
-
             current_app.logger.exception(
                 "Budget allocation failed."
             )
@@ -804,58 +391,9 @@ def new_budget():
 @role_required(*FINANCE_ROLES)
 def collections_report():
 
-    # Finance reads PaymentLog records.
-    # This route must not create, update, or delete them.
-    payment_logs = (
-        PaymentLog.query
-        .order_by(PaymentLog.id.desc())
-        .all()
-    )
-
-    total_records = len(payment_logs)
-
-    total_fares = sum(
-        (
-            Decimal(str(log.fare_amount or 0))
-            for log in payment_logs
-        ),
-        Decimal("0.00"),
-    )
-
-    total_amount_given = sum(
-        (
-            Decimal(str(log.amount_given or 0))
-            for log in payment_logs
-        ),
-        Decimal("0.00"),
-    )
-
-    total_change_given = sum(
-        (
-            Decimal(str(log.change_given or 0))
-            for log in payment_logs
-        ),
-        Decimal("0.00"),
-    )
-
-    status_totals = {}
-
-    for payment in payment_logs:
-
-        status = (
-            payment.payment_status or "unknown"
-        ).strip().lower()
-
-        status_totals[status] = (
-            status_totals.get(status, 0) + 1
-        )
+    report_data = get_collections_report()
 
     return render_template(
         "finance/collections.html",
-        payment_logs=payment_logs,
-        total_records=total_records,
-        total_fares=total_fares,
-        total_amount_given=total_amount_given,
-        total_change_given=total_change_given,
-        status_totals=status_totals,
+        **report_data,
     )

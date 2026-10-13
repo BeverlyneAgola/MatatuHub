@@ -9,15 +9,13 @@ from flask import (
 
 from flask_login import login_required, current_user
 
-from app.extensions import db
-from app.models.fleet import Vehicle
-from app.models.operations import Route
-from app.models.driver_conductor import PaymentLog
 from app.auth.decorators import role_required
 from app.utils.audit import log_action
 
 from app.conductor.services import (
     get_conductor_active_assignment,
+    get_conductor_assignment_details,
+    get_conductor_payment_logs,
     get_available_directions,
     detect_time_band,
     create_payment_log,
@@ -45,26 +43,13 @@ def my_assignment():
 
     allocation = get_conductor_active_assignment(employee_id)
 
-    vehicle = None
-    route = None
-
-    if allocation:
-        vehicle = db.session.get(
-            Vehicle,
-            allocation.vehicle_id
-        )
-
-        route = db.session.get(
-            Route,
-            allocation.route_id
-        )
-
-    payments = (
-        PaymentLog.query
-        .filter_by(conductor_id=employee_id)
-        .order_by(PaymentLog.created_at.desc())
-        .all()
+    vehicle, route = (
+        get_conductor_assignment_details(allocation)
+        if allocation
+        else (None, None)
     )
+
+    payments = get_conductor_payment_logs(employee_id)
 
     return render_template(
         "conductor/my_assignment.html",
@@ -98,15 +83,7 @@ def new_payment_log():
             url_for("conductor.my_assignment")
         )
 
-    vehicle = db.session.get(
-        Vehicle,
-        allocation.vehicle_id
-    )
-
-    route = db.session.get(
-        Route,
-        allocation.route_id
-    )
+    vehicle, route = get_conductor_assignment_details(allocation)
 
     time_band = detect_time_band()
 
@@ -164,9 +141,6 @@ def new_payment_log():
                 directions=directions,
                 time_band=detect_time_band(),
             )
-
-        db.session.add(payment)
-        db.session.commit()
 
         log_action(
             "Created conductor payment log",

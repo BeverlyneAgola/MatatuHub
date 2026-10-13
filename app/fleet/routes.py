@@ -2,6 +2,7 @@ from datetime import datetime, date
 
 from flask import (
     Blueprint,
+    abort,
     render_template,
     redirect,
     url_for,
@@ -11,20 +12,25 @@ from flask import (
 
 from flask_login import login_required, current_user
 
-from app.extensions import db
-
-from app.models import (
-    Employee,
-    Vehicle,
-    VehicleDocument,
-    MaintenanceRecord,
-    Allocation,
-    Accident,
-    Route,
-)
-
 from app.auth.decorators import role_required
 from app.utils.audit import log_action
+from app.fleet.services import (
+    change_vehicle_status as update_vehicle_status,
+    create_accident,
+    create_allocation,
+    create_maintenance_record,
+    create_vehicle,
+    create_vehicle_document,
+    end_allocation as close_allocation,
+    get_accident_form_data,
+    get_allocation,
+    get_allocation_form_data,
+    get_vehicle,
+    get_vehicle_profile,
+    list_maintenance_records,
+    list_vehicle_documents,
+    list_vehicles as fetch_vehicles,
+)
 
 
 fleet_bp = Blueprint(
@@ -47,11 +53,7 @@ fleet_bp = Blueprint(
 )
 def list_vehicles():
 
-    vehicles = (
-        Vehicle.query
-        .order_by(Vehicle.id)
-        .all()
-    )
+    vehicles = fetch_vehicles()
 
     return render_template(
         "fleet/vehicles.html",
@@ -71,35 +73,17 @@ def new_vehicle():
 
         reg_no = request.form["reg_no"].strip()
 
-        existing = Vehicle.query.filter_by(
-            reg_no=reg_no
-        ).first()
-
-        if existing:
-
-            flash(
-                "A vehicle with this registration number "
-                "already exists."
+        try:
+            vehicle = create_vehicle(
+                reg_no=reg_no,
+                make=request.form.get("make"),
+                year=request.form.get("year", type=int),
+                vehicle_type=request.form.get("type"),
+                ownership=request.form.get("ownership"),
             )
-
-            return redirect(
-                url_for("fleet.new_vehicle")
-            )
-
-        vehicle = Vehicle(
-            reg_no=reg_no,
-            make=request.form.get("make"),
-            year=request.form.get(
-                "year",
-                type=int
-            ),
-            type=request.form.get("type"),
-            ownership=request.form.get("ownership"),
-            status="active",
-        )
-
-        db.session.add(vehicle)
-        db.session.commit()
+        except ValueError as error:
+            flash(str(error))
+            return redirect(url_for("fleet.new_vehicle"))
 
         log_action(
             "Created vehicle",
@@ -129,51 +113,15 @@ def new_vehicle():
 )
 def view_vehicle(id):
 
-    vehicle = Vehicle.query.get_or_404(id)
-
-    documents = (
-        VehicleDocument.query
-        .filter_by(vehicle_id=vehicle.id)
-        .order_by(
-            VehicleDocument.expiry_date
-        )
-        .all()
-    )
-
-    maintenance_records = (
-        MaintenanceRecord.query
-        .filter_by(vehicle_id=vehicle.id)
-        .order_by(
-            MaintenanceRecord.date.desc()
-        )
-        .all()
-    )
-
-    allocations = (
-        Allocation.query
-        .filter_by(vehicle_id=vehicle.id)
-        .order_by(
-            Allocation.started_at.desc()
-        )
-        .all()
-    )
-
-    accidents = (
-        Accident.query
-        .filter_by(vehicle_id=vehicle.id)
-        .order_by(
-            Accident.date.desc()
-        )
-        .all()
-    )
+    vehicle = get_vehicle(id)
+    if vehicle is None:
+        abort(404)
+    profile = get_vehicle_profile(vehicle.id)
 
     return render_template(
         "fleet/vehicle_profile.html",
         vehicle=vehicle,
-        documents=documents,
-        maintenance_records=maintenance_records,
-        allocations=allocations,
-        accidents=accidents,
+        **profile,
         today=date.today(),
     )
 
@@ -186,33 +134,24 @@ def view_vehicle(id):
 @role_required("Fleet Manager")
 def change_vehicle_status(id):
 
-    vehicle = Vehicle.query.get_or_404(id)
+    vehicle = get_vehicle(id)
+    if vehicle is None:
+        abort(404)
 
     old_status = vehicle.status
 
     new_status = request.form.get("status")
 
-    allowed_statuses = [
-        "active",
-        "under_maintenance",
-        "out_of_service",
-        "retired",
-    ]
-
-    if new_status not in allowed_statuses:
-
-        flash("Invalid vehicle status.")
-
+    try:
+        old_status = update_vehicle_status(vehicle, new_status)
+    except ValueError as error:
+        flash(str(error))
         return redirect(
             url_for(
                 "fleet.view_vehicle",
                 id=vehicle.id
             )
         )
-
-    vehicle.status = new_status
-
-    db.session.commit()
 
     log_action(
         "Changed vehicle status",
@@ -247,16 +186,16 @@ def change_vehicle_status(id):
 @role_required("Fleet Manager")
 def vehicle_documents(id):
 
-    vehicle = Vehicle.query.get_or_404(id)
+    vehicle = get_vehicle(id)
+    if vehicle is None:
+        abort(404)
 
     if request.method == "POST":
 
-        document = VehicleDocument(
+        document = create_vehicle_document(
             vehicle_id=vehicle.id,
             doc_type=request.form["doc_type"],
-            document_number=request.form.get(
-                "document_number"
-            ),
+            document_number=request.form.get("document_number"),
             issue_date=request.form.get(
                 "issue_date",
                 type=date.fromisoformat
@@ -266,9 +205,6 @@ def vehicle_documents(id):
                 type=date.fromisoformat
             ) if request.form.get("expiry_date") else None,
         )
-
-        db.session.add(document)
-        db.session.commit()
 
         log_action(
             "Added vehicle document",
@@ -287,14 +223,7 @@ def vehicle_documents(id):
             )
         )
 
-    documents = (
-        VehicleDocument.query
-        .filter_by(vehicle_id=vehicle.id)
-        .order_by(
-            VehicleDocument.expiry_date
-        )
-        .all()
-    )
+    documents = list_vehicle_documents(vehicle.id)
 
     return render_template(
         "fleet/documents.html",
@@ -316,11 +245,13 @@ def vehicle_documents(id):
 @role_required("Fleet Manager")
 def vehicle_maintenance(id):
 
-    vehicle = Vehicle.query.get_or_404(id)
+    vehicle = get_vehicle(id)
+    if vehicle is None:
+        abort(404)
 
     if request.method == "POST":
 
-        maintenance = MaintenanceRecord(
+        maintenance = create_maintenance_record(
             vehicle_id=vehicle.id,
             created_by=current_user.employee.id,
             description=request.form["description"],
@@ -328,15 +259,11 @@ def vehicle_maintenance(id):
                 "cost",
                 type=float
             ),
-            date=request.form.get(
+            record_date=request.form.get(
                 "date",
                 type=date.fromisoformat
             ) if request.form.get("date") else date.today(),
         )
-
-        db.session.add(maintenance)
-
-        db.session.commit()
 
         log_action(
             "Added maintenance record",
@@ -355,14 +282,7 @@ def vehicle_maintenance(id):
             )
         )
 
-    maintenance_records = (
-        MaintenanceRecord.query
-        .filter_by(vehicle_id=vehicle.id)
-        .order_by(
-            MaintenanceRecord.date.desc()
-        )
-        .all()
-    )
+    maintenance_records = list_maintenance_records(vehicle.id)
 
     return render_template(
         "fleet/maintenance.html",
@@ -421,123 +341,17 @@ def new_allocation():
                 url_for("fleet.new_allocation")
             )
 
-        driver = Employee.query.get_or_404(
-            driver_id
-        )
-
-        conductor = Employee.query.get_or_404(
-            conductor_id
-        )
-
-        vehicle = Vehicle.query.get_or_404(
-            vehicle_id
-        )
-
-        route = Route.query.get_or_404(
-            route_id
-        )
-
-        # ----------------------------------------------------
-        # Validate driver role
-        # ----------------------------------------------------
-
-        if driver.role.name != "Driver":
-
-            flash(
-                "The selected employee is not a Driver."
+        try:
+            allocation = create_allocation(
+                driver_id=driver_id,
+                conductor_id=conductor_id,
+                vehicle_id=vehicle_id,
+                route_id=route_id,
+                created_by=current_user.employee.id,
             )
-
-            return redirect(
-                url_for("fleet.new_allocation")
-            )
-
-        # ----------------------------------------------------
-        # Validate conductor role
-        # ----------------------------------------------------
-
-        if conductor.role.name != "Conductor":
-
-            flash(
-                "The selected employee is not a Conductor."
-            )
-
-            return redirect(
-                url_for("fleet.new_allocation")
-            )
-
-        # ----------------------------------------------------
-        # Only active employees can be allocated
-        # ----------------------------------------------------
-
-        if driver.status != "active":
-
-            flash(
-                "The selected driver is not active."
-            )
-
-            return redirect(
-                url_for("fleet.new_allocation")
-            )
-
-        if conductor.status != "active":
-
-            flash(
-                "The selected conductor is not active."
-            )
-
-            return redirect(
-                url_for("fleet.new_allocation")
-            )
-
-        # ----------------------------------------------------
-        # Check active allocation conflicts
-        #
-        # A driver or vehicle may only have one active
-        # allocation at a time.
-        # ----------------------------------------------------
-
-        conflict = Allocation.query.filter(
-            Allocation.status == "active",
-            db.or_(
-                Allocation.driver_id == driver.id,
-                Allocation.vehicle_id == vehicle.id,
-            ),
-        ).first()
-
-        if conflict:
-
-            if conflict.driver_id == driver.id:
-
-                flash(
-                    "This driver already has an active "
-                    "allocation. End it first before "
-                    "creating a new one."
-                )
-
-            elif conflict.vehicle_id == vehicle.id:
-
-                flash(
-                    "This vehicle already has an active "
-                    "allocation. End it first before "
-                    "creating a new one."
-                )
-
-            return redirect(
-                url_for("fleet.new_allocation")
-            )
-
-        allocation = Allocation(
-            driver_id=driver.id,
-            conductor_id=conductor.id,
-            vehicle_id=vehicle.id,
-            route_id=route.id,
-            status="active",
-            created_by=current_user.employee.id,
-        )
-
-        db.session.add(allocation)
-
-        db.session.commit()
+        except ValueError as error:
+            flash(str(error))
+            return redirect(url_for("fleet.new_allocation"))
 
         log_action(
             "Created allocation",
@@ -552,59 +366,15 @@ def new_allocation():
         return redirect(
             url_for(
                 "fleet.view_vehicle",
-                id=vehicle.id
+                id=allocation.vehicle_id
             )
         )
 
-    drivers = (
-        Employee.query
-        .join(Employee.role)
-        .filter(
-            Employee.status == "active",
-            # Role name is checked below as well.
-        )
-        .all()
-    )
-
-    drivers = [
-        employee
-        for employee in drivers
-        if employee.role.name == "Driver"
-    ]
-
-    conductors = (
-        Employee.query
-        .filter_by(status="active")
-        .all()
-    )
-
-    conductors = [
-        employee
-        for employee in conductors
-        if employee.role.name == "Conductor"
-    ]
-
-    vehicles = (
-        Vehicle.query
-        .filter(
-            Vehicle.status != "retired"
-        )
-        .order_by(Vehicle.reg_no)
-        .all()
-    )
-
-    routes = (
-        Route.query
-        .order_by(Route.name)
-        .all()
-    )
+    form_data = get_allocation_form_data()
 
     return render_template(
         "fleet/new_allocation.html",
-        drivers=drivers,
-        conductors=conductors,
-        vehicles=vehicles,
-        routes=routes,
+        **form_data,
     )
 
 
@@ -616,25 +386,19 @@ def new_allocation():
 @role_required("Fleet Manager")
 def end_allocation(id):
 
-    allocation = Allocation.query.get_or_404(id)
-
-    if allocation.status != "active":
-
-        flash(
-            "This allocation has already ended."
-        )
-
+    allocation = get_allocation(id)
+    if allocation is None:
+        abort(404)
+    try:
+        close_allocation(allocation)
+    except ValueError as error:
+        flash(str(error))
         return redirect(
             url_for(
                 "fleet.view_vehicle",
                 id=allocation.vehicle_id
             )
         )
-
-    allocation.status = "ended"
-    allocation.ended_at = datetime.utcnow()
-
-    db.session.commit()
 
     log_action(
         "Ended allocation",
@@ -666,46 +430,23 @@ def end_allocation(id):
 @role_required("Inspector")
 def new_accident():
 
-    vehicles = (
-        Vehicle.query
-        .order_by(Vehicle.reg_no)
-        .all()
-    )
-
-    drivers = (
-        Employee.query
-        .filter_by(status="active")
-        .all()
-    )
-
-    drivers = [
-        employee
-        for employee in drivers
-        if employee.role.name == "Driver"
-    ]
+    form_data = get_accident_form_data()
 
     if request.method == "POST":
 
-        accident = Accident(
-            vehicle_id=request.form.get(
-                "vehicle_id",
-                type=int
-            ),
+        accident = create_accident(
+            vehicle_id=request.form.get("vehicle_id", type=int),
             driver_id=request.form.get(
                 "driver_id",
                 type=int
             ) or None,
             reported_by=current_user.employee.id,
             description=request.form["description"],
-            date=request.form.get(
+            accident_date=request.form.get(
                 "date",
                 type=datetime.fromisoformat
             ) if request.form.get("date") else datetime.utcnow(),
         )
-
-        db.session.add(accident)
-
-        db.session.commit()
 
         log_action(
             "Reported accident",
@@ -725,7 +466,5 @@ def new_accident():
 
     return render_template(
         "fleet/new_accident.html",
-        vehicles=vehicles,
-        drivers=drivers,
+        **form_data,
     )
-

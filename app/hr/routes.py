@@ -5,23 +5,29 @@ from flask import (
     url_for,
     flash,
     request,
+    abort,
+    current_app,
 )
 
 from flask_login import login_required, current_user
 
-from app.extensions import db
-from app.models import (
-    Employee,
-    Department,
-    Role,
-    User,
-    RoleHistory,
-    Complaint,
-)
-
 from app.auth.decorators import role_required
 from app.utils.audit import log_action
-from app.hr.services import generate_next_staff_id
+from app.hr.services import (
+    change_employee_role,
+    change_employee_status,
+    create_complaint,
+    create_employee,
+    get_complaint,
+    get_employee,
+    get_employee_profile,
+    list_active_employees,
+    list_complaints as fetch_complaints,
+    list_departments,
+    list_employees as fetch_employees,
+    list_roles,
+    resolve_complaint as resolve_complaint_service,
+)
 
 
 hr_bp = Blueprint(
@@ -43,17 +49,8 @@ def list_employees():
     department_id = request.args.get("department_id", type=int)
     role_id = request.args.get("role_id", type=int)
 
-    query = Employee.query
-
-    if department_id:
-        query = query.filter_by(department_id=department_id)
-
-    if role_id:
-        query = query.filter_by(role_id=role_id)
-
-    employees = query.order_by(Employee.id).all()
-
-    departments = Department.query.order_by(Department.name).all()
+    employees = fetch_employees(department_id, role_id)
+    departments = list_departments()
     roles = []
 
     return render_template(
@@ -71,9 +68,7 @@ def list_employees():
 @role_required("HR Manager")
 def new_employee():
 
-    departments = Department.query.order_by(
-        Department.name
-    ).all()
+    departments = list_departments()
 
     roles = []
 
@@ -96,63 +91,18 @@ def new_employee():
                     url_for("hr.new_employee")
                 )
 
-            department = Department.query.get_or_404(
-                department_id
-            )
-
-            role = Role.query.get_or_404(
-                role_id
-            )
-
-            # Make sure the selected position
-            # actually belongs to the selected department.
-            if role.department_id != department.id:
-                flash(
-                    "The selected position does not belong "
-                    "to the selected department."
-                )
-
-                return redirect(
-                    url_for("hr.new_employee")
-                )
-
-            employee = Employee(
-                staff_id=generate_next_staff_id(),
-
+            employee = create_employee(
+                department_id=department_id,
+                role_id=role_id,
                 national_id=request.form["national_id"],
-
                 first_name=request.form["first_name"],
-
                 last_name=request.form["last_name"],
-
-                department_id=department.id,
-
-                role_id=role.id,
-
+                username=request.form["username"],
+                password=request.form["temp_password"],
                 phone=request.form.get("phone"),
-
                 email=request.form.get("email"),
-
                 kra_pin=request.form.get("kra_pin"),
             )
-
-            db.session.add(employee)
-
-            db.session.flush()
-
-            user = User(
-                employee_id=employee.id,
-
-                username=request.form["username"],
-            )
-
-            user.set_password(
-                request.form["temp_password"]
-            )
-
-            db.session.add(user)
-
-            db.session.commit()
 
             log_action(
                 "Enrolled employee",
@@ -169,10 +119,11 @@ def new_employee():
                 url_for("hr.list_employees")
             )
 
+        except ValueError as error:
+            flash(str(error))
+            return redirect(url_for("hr.new_employee"))
         except Exception:
-
-            db.session.rollback()
-
+            current_app.logger.exception("Employee enrollment failed.")
             flash(
                 "Employee enrollment failed. "
                 "Check that the username and National ID are unique."
@@ -192,12 +143,7 @@ def new_employee():
 @role_required("HR Manager")
 def roles_by_department(department_id):
 
-    roles = (
-        Role.query
-        .filter_by(department_id=department_id)
-        .order_by(Role.name)
-        .all()
-    )
+    roles = list_roles(department_id)
 
     return [
         {
@@ -212,20 +158,10 @@ def roles_by_department(department_id):
 @role_required("HR Manager")
 def view_employee(id):
 
-    employee = Employee.query.get_or_404(id)
-
-    user = User.query.filter_by(
-        employee_id=employee.id
-    ).first()
-
-    role_history = (
-        RoleHistory.query
-        .filter_by(employee_id=employee.id)
-        .order_by(RoleHistory.changed_at.desc())
-        .all()
-    )
-
-    roles = Role.query.order_by(Role.name).all()
+    employee = get_employee(id)
+    if employee is None:
+        abort(404)
+    user, role_history, roles = get_employee_profile(employee)
 
     return render_template(
         "hr/profile.html",
@@ -244,34 +180,18 @@ def view_employee(id):
 @role_required("HR Manager")
 def change_status(id):
 
-    employee = Employee.query.get_or_404(id)
-
-    old_status = employee.status
+    employee = get_employee(id)
+    if employee is None:
+        abort(404)
     new_status = request.form["status"]
 
-    if new_status not in ["active", "fired"]:
-
-        flash("Invalid employee status.")
-
+    try:
+        old_status = change_employee_status(employee, new_status)
+    except ValueError as error:
+        flash(str(error))
         return redirect(
             url_for("hr.view_employee", id=id)
         )
-
-    employee.status = new_status
-
-    user = User.query.filter_by(
-        employee_id=employee.id
-    ).first()
-
-    if user:
-
-        if new_status == "fired":
-            user.account_status = "inactive"
-
-        elif new_status == "active":
-            user.account_status = "active"
-
-    db.session.commit()
 
     log_action(
         "Changed employee status",
@@ -299,7 +219,9 @@ def change_status(id):
 @role_required("HR Manager")
 def change_role(id):
 
-    employee = Employee.query.get_or_404(id)
+    employee = get_employee(id)
+    if employee is None:
+        abort(404)
 
     new_role_id = request.form.get(
         "role_id",
@@ -314,29 +236,15 @@ def change_role(id):
             url_for("hr.view_employee", id=id)
         )
 
-    new_role = Role.query.get_or_404(new_role_id)
-
-    old_role_id = employee.role_id
-
-    if old_role_id == new_role.id:
-
-        flash("Employee already has this role.")
-
-        return redirect(
-            url_for("hr.view_employee", id=id)
+    try:
+        old_role_id, new_role = change_employee_role(
+            employee,
+            new_role_id,
+            current_user.employee.id,
         )
-
-    history = RoleHistory(
-        employee_id=employee.id,
-        role_id=old_role_id,
-        changed_by=current_user.employee.id,
-    )
-
-    db.session.add(history)
-
-    employee.role_id = new_role.id
-
-    db.session.commit()
+    except ValueError as error:
+        flash(str(error))
+        return redirect(url_for("hr.view_employee", id=id))
 
     log_action(
         "Changed employee role",
@@ -366,24 +274,7 @@ def list_complaints():
 
     category = request.args.get("category")
     status = request.args.get("status")
-
-    query = Complaint.query
-
-    if category:
-        query = query.filter_by(
-            category=category
-        )
-
-    if status:
-        query = query.filter_by(
-            status=status
-        )
-
-    complaints = (
-        query
-        .order_by(Complaint.created_at.desc())
-        .all()
-    )
+    complaints = fetch_complaints(category, status)
 
     return render_template(
         "hr/complaints.html",
@@ -401,30 +292,18 @@ def list_complaints():
 @role_required("HR Manager")
 def new_complaint():
 
-    employees = (
-        Employee.query
-        .filter_by(status="active")
-        .order_by(Employee.first_name)
-        .all()
-    )
+    employees = list_active_employees()
 
     if request.method == "POST":
 
-        complaint = Complaint(
+        complaint = create_complaint(
             category=request.form["category"],
             description=request.form["description"],
-            filed_by_phone=request.form.get(
-                "filed_by_phone"
-            ),
+            filed_by_phone=request.form.get("filed_by_phone"),
             filed_by_employee_id=request.form.get(
-                "filed_by_employee_id",
-                type=int,
+                "filed_by_employee_id", type=int
             ),
         )
-
-        db.session.add(complaint)
-
-        db.session.commit()
 
         log_action(
             "Created complaint",
@@ -452,21 +331,15 @@ def new_complaint():
 @role_required("HR Manager")
 def resolve_complaint(id):
 
-    complaint = Complaint.query.get_or_404(id)
-
-    complaint.status = request.form["status"]
-
-    complaint.action_taken = request.form[
-        "action_taken"
-    ]
-
-    complaint.resolved_by = current_user.employee.id
-
-    from datetime import datetime
-
-    complaint.resolved_at = datetime.utcnow()
-
-    db.session.commit()
+    complaint = get_complaint(id)
+    if complaint is None:
+        abort(404)
+    resolve_complaint_service(
+        complaint,
+        request.form["status"],
+        request.form["action_taken"],
+        current_user.employee.id,
+    )
 
     log_action(
         "Resolved complaint",
