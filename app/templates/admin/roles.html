@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Roles</title>
+</head>
+<body>
+
+    <h1>System Roles</h1>
+
+    <p>
+        <a href="{{ url_for('admin.users') }}">Users</a> |
+        <a href="{{ url_for('admin.audit_log') }}">Audit Log</a>
+    </p>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Role</th>
+                <th>Department</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for role in roles %}
+            <tr>
+                <td>{{ role.id }}</td>
+                <td>{{ role.name }}</td>
+                <td>{{ role.department.name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

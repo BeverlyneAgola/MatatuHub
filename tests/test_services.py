@@ -4,9 +4,14 @@ from decimal import Decimal
 
 from flask import Flask
 
-from app.extensions import db
+from app.admin import admin_bp
+from app.admin import routes as admin_routes
+from app.admin.services import get_all_roles, get_all_users
+from app.auth.routes import load_user
+from app.extensions import db, login_manager
 from app.models import (
     Allocation,
+    AuditLog,
     Claim,
     Compensation,
     Department,
@@ -53,9 +58,13 @@ class ServiceTests(unittest.TestCase):
         cls.app.config.update(
             SQLALCHEMY_DATABASE_URI="sqlite://",
             SQLALCHEMY_TRACK_MODIFICATIONS=False,
+            SECRET_KEY="test-secret",
             TESTING=True,
         )
         db.init_app(cls.app)
+        login_manager.user_loader(load_user)
+        login_manager.init_app(cls.app)
+        cls.app.register_blueprint(admin_bp)
 
     def setUp(self):
         self.app_context = self.app.app_context()
@@ -84,6 +93,10 @@ class ServiceTests(unittest.TestCase):
             name="Inspector",
             department_id=self.operations.id,
         )
+        self.admin_role = Role(
+            name="System Administrator",
+            department_id=self.operations.id,
+        )
         self.accountant_role = Role(
             name="Accountant",
             department_id=self.finance.id,
@@ -94,10 +107,12 @@ class ServiceTests(unittest.TestCase):
                 self.conductor_role,
                 self.hr_role,
                 self.inspector_role,
+                self.admin_role,
                 self.accountant_role,
             ]
         )
         db.session.commit()
+        self.client = self.app.test_client()
 
     def tearDown(self):
         db.session.remove()
@@ -125,6 +140,161 @@ class ServiceTests(unittest.TestCase):
         db.session.add(route)
         db.session.commit()
         return route
+
+    def make_admin_user(self, username="admin-user"):
+        employee = self.make_employee(
+            self.admin_role,
+            f"NID-{username}",
+            username,
+        )
+        return User.query.filter_by(employee_id=employee.id).one()
+
+    def login_as(self, user):
+        with self.client.session_transaction() as session:
+            session["_user_id"] = str(user.id)
+            session["_fresh"] = True
+
+    def test_admin_retrieves_all_user_accounts(self):
+        admin_user = self.make_admin_user()
+        employee = self.make_employee(
+            self.driver_role,
+            "NID-ADMIN-LIST-DRIVER",
+            "listed-driver",
+        )
+        expected_user = User.query.filter_by(employee_id=employee.id).one()
+
+        self.assertEqual(
+            get_all_users(),
+            [admin_user, expected_user],
+        )
+
+    def test_admin_retrieves_all_system_roles(self):
+        self.assertEqual(
+            [role.name for role in get_all_roles()],
+            [
+                "Accountant",
+                "Conductor",
+                "Driver",
+                "HR Manager",
+                "Inspector",
+                "System Administrator",
+            ],
+        )
+
+    def test_admin_activates_inactive_account_and_records_audit(self):
+        admin_user = self.make_admin_user()
+        employee = self.make_employee(
+            self.driver_role,
+            "NID-ADMIN-ACTIVATE",
+            "inactive-driver",
+        )
+        target = User.query.filter_by(employee_id=employee.id).one()
+        target.account_status = "inactive"
+        db.session.commit()
+        self.login_as(admin_user)
+
+        response = self.client.post(
+            f"/admin/users/{target.id}/status",
+            data={"status": "active"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(target.account_status, "active")
+        audit_entry = AuditLog.query.one()
+        self.assertEqual(audit_entry.user_id, admin_user.id)
+        self.assertEqual(audit_entry.action, "User account status changed")
+        self.assertEqual(audit_entry.target_table, "users")
+        self.assertEqual(audit_entry.target_id, target.id)
+        self.assertEqual(audit_entry.old_value, "inactive")
+        self.assertEqual(audit_entry.new_value, "active")
+
+    def test_admin_deactivates_active_account_and_records_audit(self):
+        admin_user = self.make_admin_user()
+        employee = self.make_employee(
+            self.driver_role,
+            "NID-ADMIN-DEACTIVATE",
+            "active-driver",
+        )
+        target = User.query.filter_by(employee_id=employee.id).one()
+        self.login_as(admin_user)
+
+        response = self.client.post(
+            f"/admin/users/{target.id}/status",
+            data={"status": "inactive"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(target.account_status, "inactive")
+        audit_entry = AuditLog.query.one()
+        self.assertEqual(audit_entry.user_id, admin_user.id)
+        self.assertEqual(audit_entry.target_id, target.id)
+        self.assertEqual(audit_entry.old_value, "active")
+        self.assertEqual(audit_entry.new_value, "inactive")
+
+    def test_admin_rejects_invalid_account_status_without_audit(self):
+        admin_user = self.make_admin_user()
+        employee = self.make_employee(
+            self.driver_role,
+            "NID-ADMIN-INVALID-STATUS",
+            "status-driver",
+        )
+        target = User.query.filter_by(employee_id=employee.id).one()
+        self.login_as(admin_user)
+
+        response = self.client.post(
+            f"/admin/users/{target.id}/status",
+            data={"status": "suspended"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(target.account_status, "active")
+        self.assertEqual(AuditLog.query.count(), 0)
+
+    def test_admin_handles_nonexistent_user_without_audit(self):
+        admin_user = self.make_admin_user()
+        self.login_as(admin_user)
+
+        response = self.client.post(
+            "/admin/users/9999/status",
+            data={"status": "inactive"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(AuditLog.query.count(), 0)
+
+    def test_admin_cannot_deactivate_own_account(self):
+        admin_user = self.make_admin_user()
+        self.login_as(admin_user)
+
+        response = self.client.post(
+            f"/admin/users/{admin_user.id}/status",
+            data={"status": "inactive"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(admin_user.account_status, "active")
+        self.assertEqual(AuditLog.query.count(), 0)
+
+    def test_non_admin_receives_forbidden_on_admin_routes(self):
+        employee = self.make_employee(
+            self.hr_role,
+            "NID-ADMIN-FORBIDDEN",
+            "non-admin-user",
+        )
+        non_admin = User.query.filter_by(employee_id=employee.id).one()
+        self.login_as(non_admin)
+
+        for path in ("/admin/users", "/admin/roles", "/admin/audit-log"):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.status_code, 403)
+
+        response = self.client.post(
+            "/admin/users/1/status",
+            data={"status": "inactive"},
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(AuditLog.query.count(), 0)
 
     def test_hr_employee_status_and_role_history(self):
         employee = self.make_employee(

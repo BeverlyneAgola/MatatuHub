@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Users</title>
+</head>
+<body>
+
+    <h1>User Management</h1>
+
+    <p>
+        <a href="{{ url_for('admin.roles') }}">Roles</a> |
+        <a href="{{ url_for('admin.audit_log') }}">Audit Log</a>
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Employee</th>
+                <th>Staff ID</th>
+                <th>Department</th>
+                <th>Role</th>
+                <th>Account Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>
+                    {{ user.employee.first_name }}
+                    {{ user.employee.last_name }}
+                </td>
+                <td>{{ user.employee.staff_id }}</td>
+                <td>{{ user.employee.department.name }}</td>
+                <td>{{ user.employee.role.name }}</td>
+                <td>{{ user.account_status }}</td>
+
+                <td>
+                    {% if user.account_status == "active" %}
+                        <form method="POST"
+                              action="{{ url_for('admin.update_status', user_id=user.id) }}">
+                            <input type="hidden"
+                                   name="status"
+                                   value="inactive">
+                            <button type="submit">
+                                Deactivate
+                            </button>
+                        </form>
+                    {% else %}
+                        <form method="POST"
+                              action="{{ url_for('admin.update_status', user_id=user.id) }}">
+                            <input type="hidden"
+                                   name="status"
+                                   value="active">
+                            <button type="submit">
+                                Activate
+                            </button>
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
