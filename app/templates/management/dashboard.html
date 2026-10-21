@@ -1,0 +1,64 @@
+<section class="management-links">
+    <h2>Management Reports</h2>
+
+    <div class="management-grid">
+
+        <a href="{{ url_for('management.fleet_allocations') }}"
+           class="management-card">
+            <h3>Fleet & Allocations</h3>
+            <p>View vehicles, assignments, routes, and allocation history.</p>
+        </a>
+
+        <a href="{{ url_for('management.routes_overview') }}"
+           class="management-card">
+            <h3>Routes Overview</h3>
+            <p>Review registered routes, fares, and active allocations.</p>
+        </a>
+
+        <a href="{{ url_for('management.outstanding_issues') }}"
+           class="management-card">
+            <h3>Outstanding Issues</h3>
+            <p>Review pending claims, open accidents, and complaints.</p>
+        </a>
+
+        <a href="{{ url_for('management.workforce_overview') }}"
+           class="management-card">
+            <h3>Workforce Overview</h3>
+            <p>Review staff distribution and active driver/conductor assignments.</p>
+        </a>
+
+    </div>
+</section>
+
+<style>
+    .management-links {
+        margin-top: 30px;
+    }
+
+    .management-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+    }
+
+    .management-card {
+        display: block;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #222;
+        box-shadow: 0 2px 5px #00000010;
+        transition: transform 0.2s;
+    }
+
+    .management-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .management-card h3 {
+        color: #183153;
+        margin-top: 0;
+    }
+</style>
+```

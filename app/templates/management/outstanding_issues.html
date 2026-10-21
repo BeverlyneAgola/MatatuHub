@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outstanding Issues - MatatuHub</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f6f9;
+            color: #222;
+        }
+
+        header {
+            background: #183153;
+            color: white;
+            padding: 20px 30px;
+        }
+
+        nav a {
+            color: white;
+            margin-right: 18px;
+            text-decoration: none;
+        }
+
+        main {
+            padding: 25px;
+        }
+
+        section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #e9eef5;
+        }
+
+        .back {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #183153;
+        }
+
+        .empty {
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Outstanding Issues</h1>
+
+    <nav>
+        <a href="{{ url_for('management.dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('management.fleet_allocations') }}">Fleet & Allocations</a>
+        <a href="{{ url_for('management.routes_overview') }}">Routes</a>
+        <a href="{{ url_for('management.outstanding_issues') }}">Outstanding Issues</a>
+        <a href="{{ url_for('management.workforce_overview') }}">Workforce</a>
+    </nav>
+</header>
+
+<main>
+    <a class="back" href="{{ url_for('management.dashboard') }}">
+        &larr; Back to Management Dashboard
+    </a>
+
+    <section>
+        <h2>Pending Claims ({{ issues.pending_claims|length }})</h2>
+
+        {% if issues.pending_claims %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Department</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Amount Requested</th>
+                        <th>Date Filed</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for claim in issues.pending_claims %}
+                    <tr>
+                        <td>{{ claim.id }}</td>
+                        <td>{{ claim.department }}</td>
+                        <td>{{ claim.category }}</td>
+                        <td>{{ claim.description }}</td>
+                        <td>
+                            KSh {{ "%.2f"|format(claim.amount_requested or 0) }}
+                        </td>
+                        <td>
+                            {% if claim.created_at %}
+                                {{ claim.created_at.strftime("%d %b %Y") }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="empty">There are no pending claims.</p>
+        {% endif %}
+    </section>
+
+
+    <section>
+        <h2>Open Accidents ({{ issues.open_accidents|length }})</h2>
+
+        {% if issues.open_accidents %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Vehicle ID</th>
+                        <th>Driver ID</th>
+                        <th>Description</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for accident in issues.open_accidents %}
+                    <tr>
+                        <td>{{ accident.id }}</td>
+                        <td>{{ accident.vehicle_id }}</td>
+                        <td>{{ accident.driver_id }}</td>
+                        <td>{{ accident.description }}</td>
+                        <td>
+                            {% if accident.date %}
+                                {{ accident.date.strftime("%d %b %Y") }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>{{ accident.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="empty">There are no open accidents.</p>
+        {% endif %}
+    </section>
+
+
+    <section>
+        <h2>
+            Unresolved Complaints
+            ({{ issues.unresolved_complaints|length }})
+        </h2>
+
+        {% if issues.unresolved_complaints %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Date Filed</th>
+                        <th>Filed By</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for complaint in issues.unresolved_complaints %}
+                    <tr>
+                        <td>{{ complaint.id }}</td>
+                        <td>{{ complaint.category }}</td>
+                        <td>{{ complaint.description }}</td>
+                        <td>
+                            {% if complaint.created_at %}
+                                {{ complaint.created_at.strftime("%d %b %Y") }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if complaint.filed_by_employee_id %}
+                                Employee #{{ complaint.filed_by_employee_id }}
+                            {% elif complaint.filed_by_phone %}
+                                {{ complaint.filed_by_phone }}
+                            {% else %}
+                                Not recorded
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="empty">There are no unresolved complaints.</p>
+        {% endif %}
+    </section>
+</main>
+
+</body>
+</html>
+```

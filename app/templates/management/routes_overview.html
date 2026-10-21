@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Routes Overview - MatatuHub</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f6f9;
+            color: #222;
+        }
+
+        header {
+            background: #183153;
+            color: white;
+            padding: 20px 30px;
+        }
+
+        nav a {
+            color: white;
+            margin-right: 18px;
+            text-decoration: none;
+        }
+
+        main {
+            padding: 25px;
+        }
+
+        section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 750px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #e9eef5;
+        }
+
+        .back {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #183153;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Routes Overview</h1>
+
+    <nav>
+        <a href="{{ url_for('management.dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('management.fleet_allocations') }}">Fleet & Allocations</a>
+        <a href="{{ url_for('management.routes_overview') }}">Routes</a>
+        <a href="{{ url_for('management.outstanding_issues') }}">Outstanding Issues</a>
+        <a href="{{ url_for('management.workforce_overview') }}">Workforce</a>
+    </nav>
+</header>
+
+<main>
+    <a class="back" href="{{ url_for('management.dashboard') }}">
+        &larr; Back to Management Dashboard
+    </a>
+
+    <section>
+        <h2>Registered Routes</h2>
+
+        {% if routes %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Route Name</th>
+                        <th>Starting Point</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                        <th>Active Allocations</th>
+                        <th>Fare Records</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in routes %}
+                    <tr>
+                        <td>{{ item.route.name }}</td>
+                        <td>{{ item.route.start_point }}</td>
+                        <td>{{ item.route.destination }}</td>
+                        <td>{{ item.route.status }}</td>
+                        <td>{{ item.active_allocations }}</td>
+                        <td>{{ item.fares|length }}</td>
+                    </tr>
+
+                    {% if item.fares %}
+                    <tr>
+                        <td colspan="6">
+                            <strong>Fare records:</strong>
+
+                            {% for fare in item.fares %}
+                                <div>
+                                    {{ fare.direction }} |
+                                    {{ fare.time_band }} |
+                                    KSh {{ "%.2f"|format(fare.amount) }} |
+                                    Effective from {{ fare.effective_from }}
+                                    {% if fare.effective_until %}
+                                        until {{ fare.effective_until }}
+                                    {% else %}
+                                        (no end date recorded)
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endif %}
+
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p>No routes have been registered.</p>
+        {% endif %}
+    </section>
+</main>
+
+</body>
+</html>
+```
