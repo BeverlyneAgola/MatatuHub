@@ -29,6 +29,7 @@ def create_app():
     from app.admin import admin_bp
     from app.admin import routes as admin_routes
     from app.management import management_bp
+    from app.public import public_bp
     from app.management import routes as management_routes
 
 
@@ -44,8 +45,6 @@ def create_app():
     app.register_blueprint(conductor_operations_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(management_bp)
-    @app.route("/")
-    def home():
-        return "MatatuHub is running."
-
+    app.register_blueprint(public_bp)
+    
     return app

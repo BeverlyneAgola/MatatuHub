@@ -1,21 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Drivers - MatatuHub</title>
-</head>
-<body>
+{% extends "internal_base.html" %}
 
-    <h1>Active Drivers</h1>
+{% block title %}Active Drivers - MatatuHub{% endblock %}
 
-    <p>
-        <a href="{{ url_for('driver_operations.index') }}">
-            Back to Driver Operations Dashboard
-        </a>
-    </p>
+{% block content %}
 
-    {% if drivers %}
-        <table border="1" cellpadding="8">
+<div class="page-header">
+    <div>
+        <h1>Active Drivers</h1>
+        <p>View registered active drivers and their current assignments.</p>
+    </div>
+
+    <a href="{{ url_for('driver_operations.index') }}"
+       class="btn btn-secondary">
+        Back to Dashboard
+    </a>
+</div>
+
+
+<div class="card">
+
+    <div class="card-header">
+        <h2>Driver Records</h2>
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table">
+
             <thead>
                 <tr>
                     <th>Staff ID</th>
@@ -29,43 +40,86 @@
             </thead>
 
             <tbody>
+
                 {% for driver in drivers %}
+
                     {% set allocation = allocations_by_driver.get(driver.id) %}
 
                     <tr>
+
                         <td>{{ driver.staff_id }}</td>
-                        <td>{{ driver.first_name }} {{ driver.last_name }}</td>
+
+                        <td>
+                            {{ driver.first_name }} {{ driver.last_name }}
+                        </td>
+
                         <td>{{ driver.phone or 'Not provided' }}</td>
+
                         <td>{{ driver.driver_license_no or 'Not provided' }}</td>
 
                         {% if allocation %}
-                            <td>Assigned</td>
+
+                            <td>
+                                <span class="badge badge-success">
+                                    Assigned
+                                </span>
+                            </td>
+
                             <td>
                                 {% set vehicle = vehicles.get(allocation.vehicle_id) %}
                                 {{ vehicle.reg_no if vehicle else 'Unavailable' }}
                             </td>
+
                             <td>
                                 {% set route = routes.get(allocation.route_id) %}
                                 {{ route.name if route else 'Unavailable' }}
                             </td>
+
                         {% else %}
-                            <td>Not Assigned</td>
+
+                            <td>
+                                <span class="badge badge-warning">
+                                    Not Assigned
+                                </span>
+                            </td>
+
                             <td>—</td>
                             <td>—</td>
+
                         {% endif %}
+
                     </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            No active drivers were found.
+                        </td>
+                    </tr>
+
                 {% endfor %}
+
             </tbody>
+
         </table>
-    {% else %}
-        <p>No active drivers were found.</p>
-    {% endif %}
 
-    <p>
-        <a href="{{ url_for('driver_operations.list_trip_logs') }}">
-            View Trip Logs
+    </div>
+
+</div>
+
+
+<div class="card">
+
+    <div class="card-body">
+
+        <a href="{{ url_for('driver_operations.list_trip_logs') }}"
+           class="btn btn-primary">
+            View Driver Trip Logs
         </a>
-    </p>
 
-</body>
-</html>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "internal_base.html" %}
+
+{% block title %}My Trip Logs - MatatuHub{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>My Trip Logs</h1>
+        <p>View the trips you have previously recorded.</p>
+    </div>
+
+    <a href="{{ url_for('driver.my_assignment') }}"
+       class="btn btn-secondary">
+        Back to My Assignment
+    </a>
+
+</div>
+
+
+<div class="card">
+
+    <div class="card-header">
+        <h2>Recorded Trips</h2>
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table">
+
+            <thead>
+                <tr>
+                    <th>Trip ID</th>
+                    <th>Allocation ID</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for trip in trip_logs %}
+
+                    <tr>
+
+                        <td>{{ trip.id }}</td>
+
+                        <td>{{ trip.allocation_id }}</td>
+
+                        <td>
+                            {{ trip.start_time.strftime("%d %b %Y, %H:%M")
+                               if trip.start_time else "—" }}
+                        </td>
+
+                        <td>
+                            {{ trip.end_time.strftime("%d %b %Y, %H:%M")
+                               if trip.end_time else "Not recorded" }}
+                        </td>
+
+                        <td>{{ trip.notes or "—" }}</td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            You have not recorded any trips yet.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

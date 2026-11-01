@@ -1,147 +1,211 @@
+{% extends "internal_base.html" %}
 
+{% block title %}Collections Report | MatatuHub{% endblock %}
 
-<h1>Collections Report</h1>
+{% block content %}
 
-<p>
-    <a href="{{ url_for('finance.list_payroll') }}">
-        Payroll
-    </a>
-    |
-    <a href="{{ url_for('finance.list_claims') }}">
-        Claims
-    </a>
-    |
-    <a href="{{ url_for('finance.new_budget') }}">
-        Budgets
-    </a>
-</p>
+<div class="finance-page">
 
-<hr>
+    <div class="page-header">
+        <div>
+            <h1>Collections Report</h1>
+            <p>Review fare collections and payment records.</p>
+        </div>
+    </div>
 
-<h2>Collection Summary</h2>
+    <nav class="finance-navigation">
 
-<table border="1" cellpadding="8" cellspacing="0">
+        <a href="{{ url_for('finance.list_payroll') }}">Payroll</a>
 
-    <tbody>
+        <a href="{{ url_for('finance.list_claims') }}">Claims</a>
 
-        <tr>
-            <th>Total Payment Records</th>
-            <td>{{ total_records }}</td>
-        </tr>
+        <a href="{{ url_for('finance.new_budget') }}">Budgets</a>
 
-        <tr>
-            <th>Total Recorded Fares (KSh)</th>
-            <td>{{ "%.2f"|format(total_fares) }}</td>
-        </tr>
+        <a href="{{ url_for('finance.collections_report') }}"
+           class="active">Collections</a>
 
-        <tr>
-            <th>Total Amount Given (KSh)</th>
-            <td>{{ "%.2f"|format(total_amount_given) }}</td>
-        </tr>
+    </nav>
 
-        <tr>
-            <th>Total Change Given (KSh)</th>
-            <td>{{ "%.2f"|format(total_change_given) }}</td>
-        </tr>
+    <section class="finance-section">
 
-    </tbody>
+        <h2>Collection Summary</h2>
 
-</table>
+        <div class="summary-grid">
 
-<h3>Payment Status Breakdown</h3>
+            <div class="summary-card">
 
-{% if status_totals %}
+                <h3>Total Payment Records</h3>
 
-<table border="1" cellpadding="8" cellspacing="0">
+                <p>{{ total_records }}</p>
 
-    <thead>
-        <tr>
-            <th>Status</th>
-            <th>Number of Records</th>
-        </tr>
-    </thead>
+            </div>
 
-    <tbody>
+            <div class="summary-card">
 
-        {% for status, count in status_totals.items() %}
+                <h3>Total Fares Collected</h3>
 
-        <tr>
-            <td>{{ status|title }}</td>
-            <td>{{ count }}</td>
-        </tr>
+                <p>
+                    KSh {{ "%.2f"|format(total_fares) }}
+                </p>
 
-        {% endfor %}
+            </div>
 
-    </tbody>
+            <div class="summary-card">
 
-</table>
+                <h3>Total Amount Received</h3>
 
-{% else %}
+                <p>
+                    KSh {{ "%.2f"|format(total_amount_given) }}
+                </p>
 
-<p>No payment statuses are available.</p>
+            </div>
 
-{% endif %}
+            <div class="summary-card">
 
-<hr>
+                <h3>Total Change Given</h3>
 
-<h2>Payment Records</h2>
+                <p>
+                    KSh {{ "%.2f"|format(total_change_given) }}
+                </p>
 
-{% if payment_logs %}
+            </div>
 
-<table border="1" cellpadding="8" cellspacing="0">
+        </div>
 
-    <thead>
-        <tr>
-            <th>Record ID</th>
-            <th>Conductor ID</th>
-            <th>Allocation ID</th>
-            <th>Route ID</th>
-            <th>Direction</th>
-            <th>Time Band</th>
-            <th>Fare (KSh)</th>
-            <th>Amount Given (KSh)</th>
-            <th>Change (KSh)</th>
-            <th>Payment Status</th>
-        </tr>
-    </thead>
+    </section>
 
-    <tbody>
+    <section class="finance-section">
 
-        {% for payment in payment_logs %}
+        <h2>Payment Status Breakdown</h2>
 
-        <tr>
+        {% if status_totals %}
 
-            <td>{{ payment.id }}</td>
+            <div class="table-container">
 
-            <td>{{ payment.conductor_id }}</td>
+                <table class="data-table">
 
-            <td>{{ payment.allocation_id }}</td>
+                    <thead>
+                        <tr>
+                            <th>Payment Status</th>
+                            <th>Number of Records</th>
+                        </tr>
+                    </thead>
 
-            <td>{{ payment.route_id }}</td>
+                    <tbody>
 
-            <td>{{ payment.direction }}</td>
+                        {% for status, total in status_totals.items() %}
 
-            <td>{{ payment.time_band }}</td>
+                            <tr>
+                                <td>
+                                    <span class="status-badge status-{{ status }}">
+                                        {{ status|title }}
+                                    </span>
+                                </td>
 
-            <td>{{ "%.2f"|format(payment.fare_amount or 0) }}</td>
+                                <td>{{ total }}</td>
+                            </tr>
 
-            <td>{{ "%.2f"|format(payment.amount_given or 0) }}</td>
+                        {% endfor %}
 
-            <td>{{ "%.2f"|format(payment.change_given or 0) }}</td>
+                    </tbody>
 
-            <td>{{ payment.payment_status }}</td>
+                </table>
 
-        </tr>
+            </div>
 
-        {% endfor %}
+        {% else %}
 
-    </tbody>
+            <div class="empty-state">
+                <p>No payment status information is available.</p>
+            </div>
 
-</table>
+        {% endif %}
 
-{% else %}
+    </section>
 
-<p>No payment records are available yet.</p>
+    <section class="finance-section">
 
-{% endif %}
+        <h2>Payment Records</h2>
 
+        {% if payments %}
+
+            <div class="table-container">
+
+                <table class="data-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>ID</th>
+                            <th>Conductor ID</th>
+                            <th>Allocation ID</th>
+                            <th>Route ID</th>
+                            <th>Direction</th>
+                            <th>Time Band</th>
+                            <th>Fare Amount</th>
+                            <th>Amount Given</th>
+                            <th>Change Given</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for payment in payments %}
+
+                            <tr>
+
+                                <td>{{ payment.id }}</td>
+
+                                <td>{{ payment.conductor_id }}</td>
+
+                                <td>{{ payment.allocation_id }}</td>
+
+                                <td>{{ payment.route_id }}</td>
+
+                                <td>{{ payment.direction }}</td>
+
+                                <td>{{ payment.time_band }}</td>
+
+                                <td>
+                                    KSh {{ "%.2f"|format(payment.fare_amount) }}
+                                </td>
+
+                                <td>
+                                    KSh {{ "%.2f"|format(payment.amount_given) }}
+                                </td>
+
+                                <td>
+                                    KSh {{ "%.2f"|format(payment.change_given) }}
+                                </td>
+
+                                <td>
+                                    <span class="status-badge status-{{ payment.payment_status }}">
+                                        {{ payment.payment_status|title }}
+                                    </span>
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="empty-state">
+                <p>No payment records have been recorded yet.</p>
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+{% endblock %}

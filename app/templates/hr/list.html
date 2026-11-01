@@ -1,149 +1,123 @@
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Employees - MatatuHub</title>
-</head>
+{% extends "internal_base.html" %}
 
-<body>
+{% block title %}Employees - MatatuHub{% endblock %}
 
-    <h1>Employees</h1>
+{% block content %}
 
-    <p>
-        <a href="{{ url_for('hr.new_employee') }}">
+<section class="hr-page">
+
+    <div class="page-header">
+        <div>
+            <h1>Employees</h1>
+            <p>View and manage employee records.</p>
+        </div>
+
+        <a href="{{ url_for('hr.new_employee') }}"
+           class="btn btn-primary">
             Enroll New Employee
         </a>
-    </p>
+    </div>
 
-    <form method="GET">
+    <form method="GET" class="filter-form">
 
-        <label for="department_id">
-            Department:
-        </label>
+        <div class="form-group">
+            <label for="department_id">Department:</label>
 
-        <select name="department_id" id="department_id">
+            <select name="department_id" id="department_id">
+                <option value="">All Departments</option>
 
-            <option value="">
-                All Departments
-            </option>
+                {% for department in departments %}
+                    <option
+                        value="{{ department.id }}"
+                        {% if selected_department == department.id %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ department.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
 
-            {% for department in departments %}
+        <div class="form-group">
+            <label for="role_id">Role:</label>
 
-                <option
-                    value="{{ department.id }}"
-                    {% if selected_department == department.id %}
-                        selected
-                    {% endif %}
-                >
-                    {{ department.name }}
-                </option>
+            <select name="role_id" id="role_id">
+                <option value="">All Roles</option>
 
-            {% endfor %}
+                {% for role in roles %}
+                    <option
+                        value="{{ role.id }}"
+                        {% if selected_role == role.id %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ role.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
 
-        </select>
-
-
-        <label for="role_id">
-            Role:
-        </label>
-
-        <select name="role_id" id="role_id">
-
-            <option value="">
-                All Roles
-            </option>
-
-            {% for role in roles %}
-
-                <option
-                    value="{{ role.id }}"
-                    {% if selected_role == role.id %}
-                        selected
-                    {% endif %}
-                >
-                    {{ role.name }}
-                </option>
-
-            {% endfor %}
-
-        </select>
-
-        <button type="submit">
+        <button type="submit" class="btn btn-secondary">
             Filter
         </button>
 
+        <a href="{{ url_for('hr.list_employees') }}"
+           class="btn btn-secondary">
+            Clear Filters
+        </a>
+
     </form>
 
-    <br>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Staff ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Profile</th>
+                </tr>
+            </thead>
 
-    <table border="1">
+            <tbody>
+                {% for employee in employees %}
+                    <tr>
+                        <td>{{ employee.staff_id }}</td>
 
-        <thead>
+                        <td>
+                            {{ employee.first_name }}
+                            {{ employee.last_name }}
+                        </td>
 
-            <tr>
-                <th>Staff ID</th>
-                <th>Name</th>
-                <th>Department</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Profile</th>
-            </tr>
+                        <td>{{ employee.department.name }}</td>
 
-        </thead>
+                        <td>{{ employee.role.name }}</td>
 
-        <tbody>
+                        <td>{{ employee.status }}</td>
 
-            {% for employee in employees %}
+                        <td>
+                            <a href="{{ url_for(
+                                'hr.view_employee',
+                                id=employee.id
+                            ) }}">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6">No employees found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-            <tr>
+</section>
 
-                <td>
-                    {{ employee.staff_id }}
-                </td>
+{% endblock %}
 
-                <td>
-                    {{ employee.first_name }}
-                    {{ employee.last_name }}
-                </td>
-
-                <td>
-                    {{ employee.department.name }}
-                </td>
-
-                <td>
-                    {{ employee.role.name }}
-                </td>
-
-                <td>
-                    {{ employee.status }}
-                </td>
-
-                <td>
-                    <a href="{{ url_for(
-                        'hr.view_employee',
-                        id=employee.id
-                    ) }}">
-                        View
-                    </a>
-                </td>
-
-            </tr>
-
-            {% else %}
-
-            <tr>
-                <td colspan="6">
-                    No employees found.
-                </td>
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
-</body>
-
-</html>

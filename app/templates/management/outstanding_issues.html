@@ -1,233 +1,284 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Outstanding Issues - MatatuHub</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: #f4f6f9;
-            color: #222;
-        }
+{% extends "management/management_base.html" %}
 
-        header {
-            background: #183153;
-            color: white;
-            padding: 20px 30px;
-        }
+{% block title %}Outstanding Issues{% endblock %}
+{% block page_heading %}Outstanding Issues{% endblock %}
 
-        nav a {
-            color: white;
-            margin-right: 18px;
-            text-decoration: none;
-        }
+{% block content %}
 
-        main {
-            padding: 25px;
-        }
+<section class="mg-intro">
+    <h2>Issues Requiring Attention</h2>
+    <p>
+        Pending claims, open accidents, and unresolved complaints
+        are listed below.
+    </p>
+</section>
 
-        section {
-            background: white;
-            padding: 20px;
-            margin-bottom: 25px;
-            border-radius: 8px;
-        }
+<div class="mg-grid">
 
-        .table-container {
-            overflow-x: auto;
-        }
+    <article class="mg-card">
+        <div class="label">Pending Claims</div>
+        <div class="value">{{ issues.pending_claims|length }}</div>
+    </article>
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 650px;
-        }
+    <article class="mg-card">
+        <div class="label">Open Accidents</div>
+        <div class="value">{{ issues.open_accidents|length }}</div>
+    </article>
 
-        th, td {
-            padding: 12px;
-            text-align: left;
-            vertical-align: top;
-            border-bottom: 1px solid #ddd;
-        }
+    <article class="mg-card">
+        <div class="label">Unresolved Complaints</div>
+        <div class="value">{{ issues.unresolved_complaints|length }}</div>
+    </article>
 
-        th {
-            background: #e9eef5;
-        }
+</div>
 
-        .back {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #183153;
-        }
+<section class="mg-panel">
+    <h3>Outstanding Issues Summary</h3>
+    <div class="mg-chart-box">
+        <canvas id="issuesChart"></canvas>
+    </div>
+</section>
 
-        .empty {
-            color: #666;
-        }
-    </style>
-</head>
+<div class="mg-section-title">
+    <h3>Pending Claims</h3>
+</div>
 
-<body>
+<div class="mg-panel">
+    <div class="mg-table-wrap">
+        <table class="mg-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Department</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount Requested</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
 
-<header>
-    <h1>Outstanding Issues</h1>
+            <tbody>
+                {% for claim in issues.pending_claims %}
+                <tr>
+                    <td>{{ claim.id }}</td>
 
-    <nav>
-        <a href="{{ url_for('management.dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('management.fleet_allocations') }}">Fleet & Allocations</a>
-        <a href="{{ url_for('management.routes_overview') }}">Routes</a>
-        <a href="{{ url_for('management.outstanding_issues') }}">Outstanding Issues</a>
-        <a href="{{ url_for('management.workforce_overview') }}">Workforce</a>
-    </nav>
-</header>
+                    <td>
+                        {% if claim.department is defined and claim.department %}
+                            {{ claim.department.name }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
 
-<main>
-    <a class="back" href="{{ url_for('management.dashboard') }}">
-        &larr; Back to Management Dashboard
-    </a>
+                    <td>{{ claim.category }}</td>
+                    <td>{{ claim.description }}</td>
 
-    <section>
-        <h2>Pending Claims ({{ issues.pending_claims|length }})</h2>
+                    <td>
+                        {% if claim.amount_requested is not none %}
+                            {{ '%.2f'|format(claim.amount_requested) }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
 
-        {% if issues.pending_claims %}
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Department</th>
-                        <th>Category</th>
-                        <th>Description</th>
-                        <th>Amount Requested</th>
-                        <th>Date Filed</th>
-                    </tr>
-                </thead>
+                    <td>
+                        {% if claim.created_at %}
+                            {{ claim.created_at.strftime('%d %b %Y %H:%M') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
 
-                <tbody>
-                    {% for claim in issues.pending_claims %}
-                    <tr>
-                        <td>{{ claim.id }}</td>
-                        <td>{{ claim.department }}</td>
-                        <td>{{ claim.category }}</td>
-                        <td>{{ claim.description }}</td>
-                        <td>
-                            KSh {{ "%.2f"|format(claim.amount_requested or 0) }}
-                        </td>
-                        <td>
-                            {% if claim.created_at %}
-                                {{ claim.created_at.strftime("%d %b %Y") }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-            <p class="empty">There are no pending claims.</p>
-        {% endif %}
-    </section>
+                {% else %}
+                <tr>
+                    <td colspan="6">
+                        <div class="mg-empty">There are no pending claims.</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mg-section-title">
+    <h3>Open Accidents</h3>
+</div>
+
+<div class="mg-panel">
+    <div class="mg-table-wrap">
+        <table class="mg-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Vehicle ID</th>
+                    <th>Driver ID</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for accident in issues.open_accidents %}
+                <tr>
+                    <td>{{ accident.id }}</td>
+                    <td>{{ accident.vehicle_id }}</td>
+                    <td>{{ accident.driver_id }}</td>
+                    <td>{{ accident.description }}</td>
+
+                    <td>
+                        {% if accident.date %}
+                            {{ accident.date.strftime('%d %b %Y') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <span class="mg-status">
+                            {{ accident.status|replace('_', ' ')|title }}
+                        </span>
+                    </td>
+                </tr>
+
+                {% else %}
+                <tr>
+                    <td colspan="6">
+                        <div class="mg-empty">There are no open accidents.</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mg-section-title">
+    <h3>Unresolved Complaints</h3>
+</div>
+
+<div class="mg-panel">
+    <div class="mg-table-wrap">
+        <table class="mg-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Filed By</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for complaint in issues.unresolved_complaints %}
+                <tr>
+                    <td>{{ complaint.id }}</td>
+                    <td>{{ complaint.category }}</td>
+                    <td>{{ complaint.description }}</td>
+
+                    <td>
+                        {% if complaint.filed_by_employee_id %}
+                            {{ complaint.filed_by_employee_id }}
+                        {% elif complaint.filed_by_phone %}
+                            {{ complaint.filed_by_phone }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if complaint.created_at %}
+                            {{ complaint.created_at.strftime('%d %b %Y %H:%M') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% else %}
+                <tr>
+                    <td colspan="5">
+                        <div class="mg-empty">
+                            There are no unresolved complaints.
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
 
 
-    <section>
-        <h2>Open Accidents ({{ issues.open_accidents|length }})</h2>
+{% block scripts %}
 
-        {% if issues.open_accidents %}
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Vehicle ID</th>
-                        <th>Driver ID</th>
-                        <th>Description</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
+<script id="issues-chart-data" type="application/json">
+{
+    "pending_claims": {{ issues.pending_claims|length|tojson }},
+    "open_accidents": {{ issues.open_accidents|length|tojson }},
+    "unresolved_complaints": {{ issues.unresolved_complaints|length|tojson }}
+}
+</script>
 
-                <tbody>
-                    {% for accident in issues.open_accidents %}
-                    <tr>
-                        <td>{{ accident.id }}</td>
-                        <td>{{ accident.vehicle_id }}</td>
-                        <td>{{ accident.driver_id }}</td>
-                        <td>{{ accident.description }}</td>
-                        <td>
-                            {% if accident.date %}
-                                {{ accident.date.strftime("%d %b %Y") }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                        <td>{{ accident.status }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-            <p class="empty">There are no open accidents.</p>
-        {% endif %}
-    </section>
+<script>
+    const issuesChartData = JSON.parse(
+        document.getElementById("issues-chart-data").textContent
+    );
 
+    const issuesCanvas = document.getElementById("issuesChart");
 
-    <section>
-        <h2>
-            Unresolved Complaints
-            ({{ issues.unresolved_complaints|length }})
-        </h2>
+    if (issuesCanvas && typeof Chart !== "undefined") {
+        new Chart(issuesCanvas, {
+            type: "bar",
 
-        {% if issues.unresolved_complaints %}
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Category</th>
-                        <th>Description</th>
-                        <th>Date Filed</th>
-                        <th>Filed By</th>
-                    </tr>
-                </thead>
+            data: {
+                labels: [
+                    "Pending claims",
+                    "Open accidents",
+                    "Unresolved complaints"
+                ],
 
-                <tbody>
-                    {% for complaint in issues.unresolved_complaints %}
-                    <tr>
-                        <td>{{ complaint.id }}</td>
-                        <td>{{ complaint.category }}</td>
-                        <td>{{ complaint.description }}</td>
-                        <td>
-                            {% if complaint.created_at %}
-                                {{ complaint.created_at.strftime("%d %b %Y") }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if complaint.filed_by_employee_id %}
-                                Employee #{{ complaint.filed_by_employee_id }}
-                            {% elif complaint.filed_by_phone %}
-                                {{ complaint.filed_by_phone }}
-                            {% else %}
-                                Not recorded
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-            <p class="empty">There are no unresolved complaints.</p>
-        {% endif %}
-    </section>
-</main>
+                datasets: [{
+                    label: "Open records",
 
-</body>
-</html>
-```
+                    data: [
+                        issuesChartData.pending_claims,
+                        issuesChartData.open_accidents,
+                        issuesChartData.unresolved_complaints
+                    ],
+
+                    borderWidth: 1
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+{% endblock %}
+

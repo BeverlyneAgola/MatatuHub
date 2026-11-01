@@ -1,239 +1,336 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workforce Overview - MatatuHub</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: #f4f6f9;
-            color: #222;
-        }
+{% extends "management/management_base.html" %}
 
-        header {
-            background: #183153;
-            color: white;
-            padding: 20px 30px;
-        }
+{% block title %}Workforce Overview{% endblock %}
+{% block page_heading %}Workforce Overview{% endblock %}
 
-        nav a {
-            color: white;
-            margin-right: 18px;
-            text-decoration: none;
-        }
+{% block content %}
 
-        main {
-            padding: 25px;
-        }
+<section class="mg-intro">
+    <h2>Workforce Summary</h2>
+    <p>
+        Review employee status, department and role distribution,
+        and current driver/conductor assignments.
+    </p>
+</section>
 
-        section {
-            background: white;
-            padding: 20px;
-            margin-bottom: 25px;
-            border-radius: 8px;
-        }
+<div class="mg-grid">
 
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-        }
+    <article class="mg-card">
+        <div class="label">Total Employees</div>
+        <div class="value">{{ workforce.total_employees }}</div>
+    </article>
 
-        .card {
-            background: #e9eef5;
-            padding: 18px;
-            border-radius: 8px;
-        }
+    <article class="mg-card">
+        <div class="label">Active Employees</div>
+        <div class="value">{{ workforce.active_employees }}</div>
+    </article>
 
-        .card h3 {
-            margin-top: 0;
-        }
+    <article class="mg-card">
+        <div class="label">Fired Employees</div>
+        <div class="value">{{ workforce.fired_employees }}</div>
+    </article>
 
-        .table-container {
-            overflow-x: auto;
-        }
+    <article class="mg-card">
+        <div class="label">Active Assignments</div>
+        <div class="value">{{ workforce.active_assignments|length }}</div>
+    </article>
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 650px;
-        }
+</div>
 
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
+<div class="mg-chart-grid">
 
-        th {
-            background: #e9eef5;
-        }
-
-        .back {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #183153;
-        }
-
-        .empty {
-            color: #666;
-        }
-    </style>
-</head>
-
-<body>
-
-<header>
-    <h1>Workforce Overview</h1>
-
-    <nav>
-        <a href="{{ url_for('management.dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('management.fleet_allocations') }}">Fleet & Allocations</a>
-        <a href="{{ url_for('management.routes_overview') }}">Routes</a>
-        <a href="{{ url_for('management.outstanding_issues') }}">Outstanding Issues</a>
-        <a href="{{ url_for('management.workforce_overview') }}">Workforce</a>
-    </nav>
-</header>
-
-<main>
-    <a class="back" href="{{ url_for('management.dashboard') }}">
-        &larr; Back to Management Dashboard
-    </a>
-
-    <section>
-        <h2>Employee Summary</h2>
-
-        <div class="cards">
-            <div class="card">
-                <h3>Total Employees</h3>
-                <p>{{ workforce.total_employees }}</p>
-            </div>
-
-            <div class="card">
-                <h3>Active Employees</h3>
-                <p>{{ workforce.active_employees }}</p>
-            </div>
-
-            <div class="card">
-                <h3>Fired Employees</h3>
-                <p>{{ workforce.fired_employees }}</p>
-            </div>
+    <section class="mg-panel">
+        <h3>Employee Status</h3>
+        <div class="mg-chart-box">
+            <canvas id="employeeStatusChart"></canvas>
         </div>
     </section>
 
-
-    <section>
-        <h2>Employees by Department</h2>
-
-        {% if workforce.department_counts %}
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Department</th>
-                            <th>Number of Employees</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {% for department, count in workforce.department_counts.items() %}
-                        <tr>
-                            <td>{{ department }}</td>
-                            <td>{{ count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="empty">No department information is available.</p>
-        {% endif %}
-    </section>
-
-
-    <section>
-        <h2>Employees by Role</h2>
-
-        {% if workforce.role_counts %}
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Role</th>
-                            <th>Number of Employees</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {% for role, count in workforce.role_counts.items() %}
-                        <tr>
-                            <td>{{ role }}</td>
-                            <td>{{ count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="empty">No role information is available.</p>
-        {% endif %}
-    </section>
-
-
-    <section>
-        <h2>Active Driver and Conductor Assignments</h2>
-
-        {% if workforce.active_assignments %}
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Driver</th>
-                        <th>Conductor</th>
-                        <th>Vehicle</th>
-                        <th>Route</th>
-                        <th>Allocation Started</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for item in workforce.active_assignments %}
-                    <tr>
-                        <td>
-                            {{ item.driver.first_name }}
-                            {{ item.driver.last_name }}
-                        </td>
-
-                        <td>
-                            {{ item.conductor.first_name }}
-                            {{ item.conductor.last_name }}
-                        </td>
-
-                        <td>{{ item.vehicle.reg_no }}</td>
-
-                        <td>{{ item.route.name }}</td>
-
-                        <td>
-                            {% if item.allocation.started_at %}
-                                {{ item.allocation.started_at.strftime("%d %b %Y %H:%M") }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <section class="mg-panel">
+        <h3>Employees by Department</h3>
+        <div class="mg-chart-box">
+            <canvas id="departmentChart"></canvas>
         </div>
-        {% else %}
-            <p class="empty">There are no active driver/conductor allocations.</p>
-        {% endif %}
     </section>
-</main>
 
-</body>
-</html>
-```
+    <section class="mg-panel">
+        <h3>Employees by Role</h3>
+        <div class="mg-chart-box">
+            <canvas id="roleChart"></canvas>
+        </div>
+    </section>
+
+</div>
+
+<div class="mg-section-title">
+    <h3>Department Distribution</h3>
+</div>
+
+<div class="mg-panel">
+    <div class="mg-table-wrap">
+        <table class="mg-table">
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th>Employees</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for department, count in workforce.department_counts.items() %}
+                <tr>
+                    <td>{{ department }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2">
+                        <div class="mg-empty">No department data available.</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mg-section-title">
+    <h3>Role Distribution</h3>
+</div>
+
+<div class="mg-panel">
+    <div class="mg-table-wrap">
+        <table class="mg-table">
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Employees</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for role, count in workforce.role_counts.items() %}
+                <tr>
+                    <td>{{ role }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2">
+                        <div class="mg-empty">No role data available.</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mg-section-title">
+    <h3>Active Driver and Conductor Assignments</h3>
+</div>
+
+<div class="mg-panel">
+    <div class="mg-table-wrap">
+        <table class="mg-table">
+            <thead>
+                <tr>
+                    <th>Vehicle</th>
+                    <th>Route</th>
+                    <th>Driver</th>
+                    <th>Conductor</th>
+                    <th>Allocation Started</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in workforce.active_assignments %}
+                <tr>
+                    <td>
+                        {{ item.vehicle.reg_no if item.vehicle else '—' }}
+                    </td>
+
+                    <td>
+                        {{ item.route.name if item.route else '—' }}
+                    </td>
+
+                    <td>
+                        {% if item.driver %}
+                            {{ item.driver.full_name
+                               if item.driver.full_name is defined
+                               else item.driver.name
+                               if item.driver.name is defined
+                               else '—' }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if item.conductor %}
+                            {{ item.conductor.full_name
+                               if item.conductor.full_name is defined
+                               else item.conductor.name
+                               if item.conductor.name is defined
+                               else '—' }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if item.allocation and item.allocation.started_at %}
+                            {{ item.allocation.started_at.strftime('%d %b %Y %H:%M') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">
+                        <div class="mg-empty">
+                            There are no active driver/conductor assignments.
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script id="workforce-chart-data" type="application/json">
+{
+    "active_employees": {{ workforce.active_employees|tojson }},
+    "fired_employees": {{ workforce.fired_employees|tojson }},
+    "departments": {
+        {% for name, count in workforce.department_counts.items() %}
+            {{ name|tojson }}: {{ count|tojson }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    },
+    "roles": {
+        {% for name, count in workforce.role_counts.items() %}
+            {{ name|tojson }}: {{ count|tojson }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    }
+}
+</script>
+
+<script>
+    const workforceData = JSON.parse(
+        document.getElementById("workforce-chart-data").textContent
+    );
+
+    const chartBaseOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: "bottom"
+            }
+        }
+    };
+
+    function createWorkforceChart(canvasId, configuration) {
+        const canvas = document.getElementById(canvasId);
+
+        if (canvas && typeof Chart !== "undefined") {
+            new Chart(canvas, configuration);
+        }
+    }
+
+    createWorkforceChart("employeeStatusChart", {
+        type: "doughnut",
+
+        data: {
+            labels: ["Active", "Fired"],
+
+            datasets: [{
+                data: [
+                    workforceData.active_employees,
+                    workforceData.fired_employees
+                ],
+                borderWidth: 1
+            }]
+        },
+
+        options: chartBaseOptions
+    });
+
+    createWorkforceChart("departmentChart", {
+        type: "bar",
+
+        data: {
+            labels: Object.keys(workforceData.departments),
+
+            datasets: [{
+                label: "Employees",
+                data: Object.values(workforceData.departments),
+                borderWidth: 1
+            }]
+        },
+
+        options: {
+            ...chartBaseOptions,
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            },
+
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    createWorkforceChart("roleChart", {
+        type: "bar",
+
+        data: {
+            labels: Object.keys(workforceData.roles),
+
+            datasets: [{
+                label: "Employees",
+                data: Object.values(workforceData.roles),
+                borderWidth: 1
+            }]
+        },
+
+        options: {
+            ...chartBaseOptions,
+
+            indexAxis: "y",
+
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            },
+
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

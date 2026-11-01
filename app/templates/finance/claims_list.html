@@ -1,201 +1,170 @@
+{% extends "internal_base.html" %}
+
+{% block title %}Claims Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Claims Management</h1>
+        <p>View and review employee claims submitted to the Finance Department.</p>
+    </div>
+</div>
 
 
-<h1>Claims Management</h1>
+<div class="card">
+    <div class="card-header">
+        <h2>Claims Records</h2>
+    </div>
 
-<p>
-    <a href="{{ url_for('finance.list_payroll') }}">
-        Payroll
-    </a>
-    |
-    <a href="{{ url_for('finance.new_budget') }}">
-        Budgets
-    </a>
-    |
-    <a href="{{ url_for('finance.collections_report') }}">
-        Collections
-    </a>
-</p>
+    <form method="GET" action="{{ url_for('finance.list_claims') }}"
+          class="filter-form">
 
-<hr>
+        <div class="form-group">
+            <label for="status">Claim Status</label>
 
-<form method="GET" action="{{ url_for('finance.list_claims') }}">
+            <select name="status" id="status">
+                <option value="">All Claims</option>
 
-    <label for="status">Filter by Status</label>
+                <option value="pending"
+                    {% if selected_status == "pending" %}selected{% endif %}>
+                    Pending
+                </option>
 
-    <select id="status" name="status">
+                <option value="approved"
+                    {% if selected_status == "approved" %}selected{% endif %}>
+                    Approved
+                </option>
 
-        <option
-            value="pending"
-            {% if selected_status == "pending" %}selected{% endif %}
-        >
-            Pending
-        </option>
+                <option value="rejected"
+                    {% if selected_status == "rejected" %}selected{% endif %}>
+                    Rejected
+                </option>
+            </select>
+        </div>
 
-        <option
-            value="approved"
-            {% if selected_status == "approved" %}selected{% endif %}
-        >
-            Approved
-        </option>
+        <button type="submit" class="btn btn-primary">Filter</button>
 
-        <option
-            value="rejected"
-            {% if selected_status == "rejected" %}selected{% endif %}
-        >
-            Rejected
-        </option>
+        <a href="{{ url_for('finance.list_claims') }}" class="btn btn-secondary">
+            Clear
+        </a>
+    </form>
+</div>
 
-        <option
-            value="all"
-            {% if selected_status == "all" %}selected{% endif %}
-        >
-            All
-        </option>
 
-    </select>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Claim ID</th>
+                    <th>Department</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount Requested</th>
+                    <th>Status</th>
+                    <th>Compensation</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
 
-    <button type="submit">Filter</button>
+            <tbody>
+                {% for claim in claims %}
+                    <tr>
+                        <td>{{ claim.id }}</td>
 
-</form>
+                        <td>{{ claim.department }}</td>
 
-<hr>
+                        <td>{{ claim.category }}</td>
 
-{% if claims %}
+                        <td>{{ claim.description }}</td>
 
-<table border="1" cellpadding="8" cellspacing="0">
+                        <td>
+                            {{ "%.2f"|format(claim.amount_requested or 0) }}
+                        </td>
 
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Department</th>
-            <th>Category</th>
-            <th>Description</th>
-            <th>Requested Amount</th>
-            <th>Status</th>
-            <th>Compensation</th>
-            <th>Action</th>
-        </tr>
-    </thead>
+                        <td>
+                            {% if claim.status == "pending" %}
+                                <span class="badge badge-warning">Pending</span>
+                            {% elif claim.status == "approved" %}
+                                <span class="badge badge-success">Approved</span>
+                            {% elif claim.status == "rejected" %}
+                                <span class="badge badge-danger">Rejected</span>
+                            {% else %}
+                                <span class="badge">{{ claim.status }}</span>
+                            {% endif %}
+                        </td>
 
-    <tbody>
+                        <td>
+                            {% if compensation_map.get(claim.id) %}
+                                {{ "%.2f"|format(compensation_map.get(claim.id).amount or 0) }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
 
-        {% for claim in claims %}
+                        <td>
+                            {% if claim.status == "pending" %}
 
-        <tr>
+                                {% if current_user.employee and
+                                      current_user.employee.role and
+                                      current_user.employee.role.name in
+                                      ["Finance Manager", "Accountant"] %}
 
-            <td>{{ claim.id }}</td>
+                                    <div class="action-buttons">
+                                        <form
+                                            method="POST"
+                                            action="{{ url_for('finance.approve_claim', claim_id=claim.id) }}"
+                                        >
 
-            <td>{{ claim.department }}</td>
+                                            {% if claim.category and
+                                                  claim.category|lower == "accident" %}
+                                                <input
+                                                    type="number"
+                                                    name="compensation_amount"
+                                                    step="0.01"
+                                                    min="0"
+                                                    placeholder="Compensation amount"
+                                                    required
+                                                >
+                                            {% endif %}
 
-            <td>{{ claim.category }}</td>
+                                            <button type="submit"
+                                                    class="btn btn-success btn-sm">
+                                                Approve
+                                            </button>
+                                        </form>
 
-            <td>{{ claim.description }}</td>
+                                        <form
+                                            method="POST"
+                                            action="{{ url_for('finance.reject_claim', claim_id=claim.id) }}"
+                                            onsubmit="return confirm('Reject this claim?');"
+                                        >
+                                            <button type="submit"
+                                                    class="btn btn-danger btn-sm">
+                                                Reject
+                                            </button>
+                                        </form>
+                                    </div>
 
-            <td>
-                KSh {{ "%.2f"|format(claim.amount_requested or 0) }}
-            </td>
+                                {% else %}
+                                    <span class="text-muted">View only</span>
+                                {% endif %}
 
-            <td>{{ claim.status|title }}</td>
-
-            <td>
-
-                {% set compensation = compensation_map[claim.id] %}
-
-                {% if compensation %}
-
-                    KSh {{ "%.2f"|format(compensation.amount) }}
-
-                {% else %}
-
-                    Not recorded
-
-                {% endif %}
-
-            </td>
-
-            <td>
-
-                {% if claim.status == "pending" %}
-
-                    {% if claim.category|lower == "accident" %}
-
-                        <form
-                            method="POST"
-                            action="{{ url_for(
-                                'finance.approve_claim',
-                                claim_id=claim.id
-                            ) }}"
-                        >
-
-                            <label>
-                                Compensation Amount (KSh)
-                            </label>
-
-                            <input
-                                type="number"
-                                name="amount"
-                                min="0.01"
-                                step="0.01"
-                                value="{{ claim.amount_requested or '' }}"
-                                required
-                            >
-
-                            <button type="submit">
-                                Approve
-                            </button>
-
-                        </form>
-
-                    {% else %}
-
-                        <form
-                            method="POST"
-                            action="{{ url_for(
-                                'finance.approve_claim',
-                                claim_id=claim.id
-                            ) }}"
-                        >
-
-                            <button type="submit">
-                                Approve
-                            </button>
-
-                        </form>
-
-                    {% endif %}
-
-                    <form
-                        method="POST"
-                        action="{{ url_for(
-                            'finance.reject_claim',
-                            claim_id=claim.id
-                        ) }}"
-                    >
-
-                        <button type="submit">
-                            Reject
-                        </button>
-
-                    </form>
+                            {% else %}
+                                <span class="text-muted">Reviewed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
 
                 {% else %}
-
-                    Reviewed
-
-                {% endif %}
-
-            </td>
-
-        </tr>
-
-        {% endfor %}
-
-    </tbody>
-
-</table>
-
-{% else %}
-
-<p>No claims found for the selected status.</p>
-
-{% endif %}
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            No claims found.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

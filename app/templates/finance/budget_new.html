@@ -1,143 +1,89 @@
+{% extends "internal_base.html" %}
 
-<h1>Budget Management</h1>
+{% block title %}Budget Management{% endblock %}
 
-<p>
-    <a href="{{ url_for('finance.list_payroll') }}">
-        Payroll
-    </a>
-    |
-    <a href="{{ url_for('finance.list_claims') }}">
-        Claims
-    </a>
-    |
-    <a href="{{ url_for('finance.collections_report') }}">
-        Collections
-    </a>
-</p>
-
-<hr>
-
-<h2>Create Budget Allocation</h2>
-
-<form
-    method="POST"
-    action="{{ url_for('finance.new_budget') }}"
->
-
+{% block content %}
+<div class="page-header">
     <div>
-
-        <label for="department_id">Department</label>
-
-        <select
-            id="department_id"
-            name="department_id"
-            required
-        >
-
-            <option value="">Select Department</option>
-
-            {% for department in departments %}
-
-                <option value="{{ department.id }}">
-                    {{ department.name }}
-                </option>
-
-            {% endfor %}
-
-        </select>
-
+        <h1>Budget Management</h1>
+        <p>View departmental budget allocations and their details.</p>
     </div>
 
-    <br>
+    {% if current_user.employee and
+          current_user.employee.role and
+          current_user.employee.role.name == "Accountant" %}
 
-    <div>
+        <a href="{{ url_for('finance.new_budget') }}" class="btn btn-primary">
+            Create Budget
+        </a>
 
-        <label for="period">Budget Period</label>
+    {% endif %}
+</div>
 
-        <input
-            type="month"
-            id="period"
-            name="period"
-            required
-        >
 
+<div class="card">
+    <div class="card-header">
+        <h2>Departmental Budget Allocations</h2>
     </div>
 
-    <br>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Department</th>
+                    <th>Period</th>
+                    <th>Allocated Amount</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
 
-    <div>
+            <tbody>
+                {% for allocation in allocations %}
+                    <tr>
+                        <td>{{ allocation.id }}</td>
 
-        <label for="amount">Budget Amount (KSh)</label>
+                        <td>
+                            {% if allocation.department %}
+                                {{ allocation.department.name }}
+                            {% else %}
+                                Department #{{ allocation.department_id }}
+                            {% endif %}
+                        </td>
 
-        <input
-            type="number"
-            id="amount"
-            name="amount"
-            min="0.01"
-            step="0.01"
-            required
-        >
+                        <td>{{ allocation.period }}</td>
 
-    </div>
+                        <td>
+                            {{ "%.2f"|format(allocation.amount or 0) }}
+                        </td>
 
-    <br>
+                        <td>
+                            {% if current_user.employee and
+                                  current_user.employee.role and
+                                  current_user.employee.role.name == "Finance Manager" %}
 
-    <button type="submit">
-        Create Budget Allocation
-    </button>
+                                <a
+                                    href="{{ url_for('finance.edit_budget', allocation_id=allocation.id) }}"
+                                    class="btn btn-primary btn-sm"
+                                >
+                                    Edit
+                                </a>
 
-</form>
+                            {% else %}
+                                <span class="text-muted">View only</span>
+                            {% endif %}
+                        </td>
+                    </tr>
 
-<hr>
-
-<h2>Existing Budget Allocations</h2>
-
-{% if allocations %}
-
-<table border="1" cellpadding="8" cellspacing="0">
-
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Department</th>
-            <th>Period</th>
-            <th>Amount (KSh)</th>
-        </tr>
-    </thead>
-
-    <tbody>
-
-        {% for allocation in allocations %}
-
-        <tr>
-
-            <td>{{ allocation.id }}</td>
-
-            <td>
-                {% for department in departments %}
-
-                    {% if department.id == allocation.department_id %}
-                        {{ department.name }}
-                    {% endif %}
-
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            No budget allocations have been created.
+                        </td>
+                    </tr>
                 {% endfor %}
-            </td>
-
-            <td>{{ allocation.period }}</td>
-
-            <td>{{ "%.2f"|format(allocation.amount) }}</td>
-
-        </tr>
-
-        {% endfor %}
-
-    </tbody>
-
-</table>
-
-{% else %}
-
-<p>No budget allocations have been recorded yet.</p>
-
-{% endif %}
-
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "internal_base.html" %}
+
+{% block title %}Record Trip Log - MatatuHub{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Record a New Trip</h1>
+        <p>Submit a trip record using your current vehicle assignment.</p>
+    </div>
+
+    <a href="{{ url_for('driver.my_assignment') }}"
+       class="btn btn-secondary">
+        Back to My Assignment
+    </a>
+
+</div>
+
+
+<!-- CURRENT ASSIGNMENT -->
+
+<div class="card">
+
+    <div class="card-header">
+        <h2>Current Assignment</h2>
+    </div>
+
+    <div class="card-body">
+
+        <div class="details-grid">
+
+            <div>
+                <strong>Vehicle Registration</strong>
+                <p>
+                    {{ vehicle.reg_no if vehicle else "Not available" }}
+                </p>
+            </div>
+
+            <div>
+                <strong>Vehicle Make</strong>
+                <p>
+                    {{ vehicle.make if vehicle and vehicle.make else "Not specified" }}
+                </p>
+            </div>
+
+            <div>
+                <strong>Route</strong>
+                <p>
+                    {{ route.name if route else "Not available" }}
+                </p>
+            </div>
+
+            <div>
+                <strong>Route Start</strong>
+                <p>
+                    {{ route.start_point if route else "Not available" }}
+                </p>
+            </div>
+
+            <div>
+                <strong>Destination</strong>
+                <p>
+                    {{ route.destination if route else "Not available" }}
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- TRIP RECORDING FORM -->
+
+<div class="card">
+
+    <div class="card-header">
+        <h2>Trip Details</h2>
+    </div>
+
+    <div class="card-body">
+
+        <form method="POST"
+              action="{{ url_for('driver.new_trip_log') }}">
+
+            <div class="form-group">
+
+                <label for="notes">Trip Notes</label>
+
+                <textarea
+                    name="notes"
+                    id="notes"
+                    rows="5"
+                    class="form-control"
+                    placeholder="Enter relevant observations about this trip..."
+                ></textarea>
+
+                <small class="text-muted">
+                    Notes are optional. You can include relevant
+                    observations about the trip.
+                </small>
+
+            </div>
+
+            <div class="card-actions">
+
+                <button type="submit" class="btn btn-primary">
+                    Submit Trip Log
+                </button>
+
+                <a href="{{ url_for('driver.my_assignment') }}"
+                   class="btn btn-secondary">
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

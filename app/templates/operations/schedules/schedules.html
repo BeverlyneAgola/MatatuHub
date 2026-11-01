@@ -1,90 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Schedules - MatatuHub</title>
-</head>
+{% extends "internal_base.html" %}
 
-<body>
+{% block title %}Route Schedules - MatatuHub{% endblock %}
 
-    <h1>Schedules</h1>
+{% block content %}
+<div class="hr-page">
 
-    <h2>{{ route.name }}</h2>
+    <div class="page-header">
+        <div>
+            <h1>Route Schedules</h1>
+            <p>
+                {{ route.name }} —
+                {{ route.start_point }} to {{ route.destination }}
+            </p>
+        </div>
 
-    <p>
-        {{ route.start_point }} → {{ route.destination }}
-    </p>
-
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div>
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-
-    {% if current_user.employee.role.name in [
-        "Operations Manager",
-        "Operations Officer"
-    ] %}
-
-        <p>
-            <a href="{{ url_for(
-                'schedules.new_schedule',
-                route_id=route.id
-            ) }}">
+        {% if current_user.employee.role.name in ["Operations Manager", "Operations Officer"] %}
+            <a href="{{ url_for('schedules.new_schedule', route_id=route.id) }}"
+               class="btn btn-primary">
                 Add Schedule
             </a>
-        </p>
+        {% endif %}
+    </div>
 
-    {% endif %}
+    <div class="profile-section">
+        <h2>Scheduled Departures</h2>
 
-    {% if schedules %}
+        {% if schedules %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Departure Time</th>
+                        </tr>
+                    </thead>
 
-        <table border="1" cellpadding="8">
+                    <tbody>
+                        {% for schedule in schedules %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    {{ schedule.departure_time.strftime("%H:%M") }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No schedules have been added for this route yet.</p>
+        {% endif %}
 
-            <thead>
-                <tr>
-                    <th>Departure Time</th>
-                </tr>
-            </thead>
+        <div style="margin-top: 20px;">
+            <a href="{{ url_for('operations.view_route', id=route.id) }}"
+               class="btn">
+                Back to Route
+            </a>
+        </div>
+    </div>
 
-            <tbody>
-
-                {% for schedule in schedules %}
-
-                    <tr>
-                        <td>
-                            {{ schedule.departure_time.strftime("%H:%M") }}
-                        </td>
-                    </tr>
-
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    {% else %}
-
-        <p>
-            No schedules have been created for this route yet.
-        </p>
-
-    {% endif %}
-
-    <p>
-        <a href="{{ url_for(
-            'operations.view_route',
-            id=route.id
-        ) }}">
-            Back to Route
-        </a>
-    </p>
-
-</body>
-
-</html>
+</div>
+{% endblock %}

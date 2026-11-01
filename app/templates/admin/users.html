@@ -1,25 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Admin - Users</title>
-</head>
-<body>
+{% extends "internal_base.html" %}
 
-    <h1>User Management</h1>
+{% block title %}User Management - MatatuHub{% endblock %}
 
-    <p>
-        <a href="{{ url_for('admin.roles') }}">Roles</a> |
-        <a href="{{ url_for('admin.audit_log') }}">Audit Log</a>
-    </p>
+{% block content %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
+<section class="hr-page">
 
-    <table border="1">
+<div class="page-header">
+    <div>
+        <h1>User Management</h1>
+        <p>View system accounts and manage account activation.</p>
+    </div>
+</div>
+
+<nav class="admin-navigation">
+    <a href="{{ url_for('admin.users') }}"
+       class="active">Users</a>
+
+    <a href="{{ url_for('admin.roles') }}">System Roles</a>
+
+    <a href="{{ url_for('admin.audit_log') }}">Audit Log</a>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true, category_filter=["success", "error"]) %}
+    {% if messages %}
+        <div class="admin-flash-container">
+            {% for category, message in messages %}
+                <div class="flash-message admin-flash-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="table-container">
+    <table class="data-table">
         <thead>
             <tr>
                 <th>ID</th>
@@ -38,10 +54,12 @@
             <tr>
                 <td>{{ user.id }}</td>
                 <td>{{ user.username }}</td>
+
                 <td>
                     {{ user.employee.first_name }}
                     {{ user.employee.last_name }}
                 </td>
+
                 <td>{{ user.employee.staff_id }}</td>
                 <td>{{ user.employee.department.name }}</td>
                 <td>{{ user.employee.role.name }}</td>
@@ -49,31 +67,47 @@
 
                 <td>
                     {% if user.account_status == "active" %}
-                        <form method="POST"
-                              action="{{ url_for('admin.update_status', user_id=user.id) }}">
-                            <input type="hidden"
-                                   name="status"
-                                   value="inactive">
-                            <button type="submit">
-                                Deactivate
-                            </button>
-                        </form>
+                        {% if user.id != current_user.id %}
+                            <form method="POST"
+                                  action="{{ url_for('admin.update_status', user_id=user.id) }}">
+
+                                <input type="hidden"
+                                       name="status"
+                                       value="inactive">
+
+                                <button type="submit"
+                                        class="btn btn-secondary admin-action-button">
+                                    Deactivate
+                                </button>
+                            </form>
+                        {% else %}
+                            <span>Current account</span>
+                        {% endif %}
                     {% else %}
                         <form method="POST"
                               action="{{ url_for('admin.update_status', user_id=user.id) }}">
+
                             <input type="hidden"
                                    name="status"
                                    value="active">
-                            <button type="submit">
+
+                            <button type="submit"
+                                    class="btn btn-primary admin-action-button">
                                 Activate
                             </button>
                         </form>
                     {% endif %}
                 </td>
             </tr>
+            {% else %}
+            <tr>
+                <td colspan="8">No user accounts found.</td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
+</div>
 
-</body>
-</html>
+
+</section>
+{% endblock %}

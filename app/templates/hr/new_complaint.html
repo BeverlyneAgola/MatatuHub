@@ -1,119 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>New Complaint - MatatuHub</title>
-</head>
+{% extends "internal_base.html" %}
 
-<body>
+{% block title %}New Complaint - MatatuHub{% endblock %}
 
-    <h1>Record Complaint</h1>
+{% block content %}
 
-    <form method="POST">
+<section class="hr-page">
 
+    <div class="page-header">
         <div>
+            <h1>Record Complaint</h1>
+            <p>Record an internal or external complaint.</p>
+        </div>
+    </div>
 
-            <label for="category">
-                Category
-            </label>
+    <form method="POST" class="employee-form">
+
+        <div class="form-group">
+            <label for="category">Category</label>
 
             <select name="category" id="category" required>
-
-                <option value="internal">
-                    Internal
-                </option>
-
-                <option value="external">
-                    External
-                </option>
-
+                <option value="internal">Internal</option>
+                <option value="external">External</option>
             </select>
-
         </div>
 
-        <br>
-
-        <div>
-
-            <label for="description">
-                Description
-            </label>
-
-            <br>
+        <div class="form-group">
+            <label for="description">Description</label>
 
             <textarea
                 name="description"
                 id="description"
                 rows="6"
-                cols="60"
                 required
             ></textarea>
-
         </div>
 
-        <br>
-
-        <div>
-
-            <label for="filed_by_phone">
-                Phone
-            </label>
+        <div class="form-group">
+            <label for="filed_by_phone">Phone</label>
 
             <input
                 type="text"
                 name="filed_by_phone"
                 id="filed_by_phone"
             >
-
         </div>
 
-        <br>
-
-        <div>
-
-            <label for="filed_by_employee_id">
-                Employee
-            </label>
+        <div class="form-group">
+            <label for="filed_by_employee_id">Employee</label>
 
             <select
                 name="filed_by_employee_id"
                 id="filed_by_employee_id"
             >
-
-                <option value="">
-                    Not an employee
-                </option>
+                <option value="">Not an employee</option>
 
                 {% for employee in employees %}
-
-                <option value="{{ employee.id }}">
-                    {{ employee.staff_id }}
-                    -
-                    {{ employee.first_name }}
-                    {{ employee.last_name }}
-                </option>
-
+                    <option value="{{ employee.id }}">
+                        {{ employee.staff_id }} -
+                        {{ employee.first_name }}
+                        {{ employee.last_name }}
+                    </option>
                 {% endfor %}
-
             </select>
-
         </div>
 
-        <br>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                Record Complaint
+            </button>
 
-        <button type="submit">
-            Record Complaint
-        </button>
+            <a href="{{ url_for('hr.list_complaints') }}"
+               class="btn btn-secondary">
+                Back to Complaints
+            </a>
+        </div>
 
     </form>
 
-    <p>
-        <a href="{{ url_for('hr.list_complaints') }}">
-            Back to Complaints
-        </a>
-    </p>
+</section>
 
-</body>
+{% endblock %}
 
-</html>

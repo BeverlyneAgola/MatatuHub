@@ -1,92 +1,82 @@
 
-<!DOCTYPE html>
-<html lang="en">
+{% extends "fleet/fleet_base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>Add Vehicle - MatatuHub</title>
-</head>
+{% block title %}Add Vehicle - MatatuHub{% endblock %}
 
-<body>
+{% block fleet_content %}
+<section class="fleet-card">
+    <h2>Register a Vehicle</h2>
+    <p class="fleet-muted">Enter the vehicle details below.</p>
 
-    <h1>Add Vehicle</h1>
-
-    <form method="POST">
-
-        <p>
-            <label for="reg_no">
-                Registration Number
-            </label>
-
+    <form method="POST" class="fleet-form">
+        <div>
+            <label for="reg_no">Registration Number *</label>
             <input
                 type="text"
                 id="reg_no"
                 name="reg_no"
                 required
+                maxlength="30"
+                value="{{ request.form.get('reg_no', '') }}"
             >
-        </p>
+        </div>
 
-        <p>
-            <label for="make">
-                Make
-            </label>
-
+        <div>
+            <label for="make">Make</label>
             <input
                 type="text"
                 id="make"
                 name="make"
+                maxlength="100"
+                value="{{ request.form.get('make', '') }}"
             >
-        </p>
+        </div>
 
-        <p>
-            <label for="year">
-                Year
-            </label>
-
+        <div>
+            <label for="year">Year of Manufacture</label>
             <input
                 type="number"
                 id="year"
                 name="year"
+                min="1900"
+                max="2100"
+                value="{{ request.form.get('year', '') }}"
             >
-        </p>
+        </div>
 
-        <p>
-            <label for="type">
-                Vehicle Type
-            </label>
-
+        <div>
+            <label for="type">Vehicle Type</label>
             <input
                 type="text"
                 id="type"
                 name="type"
+                maxlength="100"
+                value="{{ request.form.get('type', '') }}"
             >
-        </p>
+        </div>
 
-        <p>
-            <label for="ownership">
-                Ownership
-            </label>
+        <div>
+            <label for="ownership">Ownership</label>
+            <select id="ownership" name="ownership">
+                <option value="">Select ownership</option>
+                <option value="owned"
+                    {% if request.form.get('ownership') == 'owned' %}selected{% endif %}>
+                    Owned
+                </option>
+                <option value="leased"
+                    {% if request.form.get('ownership') == 'leased' %}selected{% endif %}>
+                    Leased
+                </option>
+            </select>
+        </div>
 
-            <input
-                type="text"
-                id="ownership"
-                name="ownership"
-            >
-        </p>
-
-        <button type="submit">
-            Add Vehicle
-        </button>
-
+        <div class="fleet-actions">
+            <button type="submit" class="fleet-button">Save Vehicle</button>
+            <a href="{{ url_for('fleet.list_vehicles') }}"
+               class="fleet-button fleet-button-secondary">
+                Cancel
+            </a>
+        </div>
     </form>
-
-    <p>
-        <a href="{{ url_for('fleet.list_vehicles') }}">
-            Back to Vehicles
-        </a>
-    </p>
-
-</body>
-
-</html>
-
+</section>
+{% endblock %}

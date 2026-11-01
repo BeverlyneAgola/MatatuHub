@@ -1,74 +1,60 @@
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Routes - MatatuHub</title>
-</head>
+{% extends "internal_base.html" %}
 
-<body>
+{% block title %}Routes | MatatuHub{% endblock %}
 
-    <h1>Routes</h1>
+{% block content %}
+<div class="hr-page">
 
-    <p>
-        <a href="{{ url_for('operations.new_route') }}">
-            Add New Route
-        </a>
-    </p>
+    <div class="page-header">
+        <div>
+            <h1>Routes</h1>
+            <p>View and manage transport routes.</p>
+        </div>
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div>
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
-            </div>
+        {% if current_user.employee.role.name in ["Operations Manager", "Operations Officer"] %}
+            <a href="{{ url_for('operations.new_route') }}" class="btn btn-primary">
+                Add New Route
+            </a>
         {% endif %}
-    {% endwith %}
+    </div>
 
     {% if routes %}
-
-        <table border="1" cellpadding="8">
-
-            <thead>
-                <tr>
-                    <th>Route Name</th>
-                    <th>Start Point</th>
-                    <th>Destination</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                {% for route in routes %}
-
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td>{{ route.name }}</td>
-                        <td>{{ route.start_point }}</td>
-                        <td>{{ route.destination }}</td>
-                        <td>{{ route.status }}</td>
-
-                        <td>
-                            <a href="{{ url_for('operations.view_route', id=route.id) }}">
-                                View
-                            </a>
-                        </td>
+                        <th>Route Name</th>
+                        <th>Start Point</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
+                </thead>
 
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
+                <tbody>
+                    {% for route in routes %}
+                        <tr>
+                            <td>{{ route.name }}</td>
+                            <td>{{ route.start_point }}</td>
+                            <td>{{ route.destination }}</td>
+                            <td>{{ route.status }}</td>
+                            <td>
+                                <a href="{{ url_for('operations.view_route', id=route.id) }}">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
-
-        <p>No routes have been created yet.</p>
-
+        <div class="profile-section">
+            <p>No routes have been created yet.</p>
+        </div>
     {% endif %}
 
-</body>
+</div>
+{% endblock %}
 
-</html>

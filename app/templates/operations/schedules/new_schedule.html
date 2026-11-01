@@ -1,0 +1,50 @@
+
+{% extends "internal_base.html" %}
+
+{% block title %}Add Schedule - MatatuHub{% endblock %}
+
+{% block content %}
+<div class="hr-page">
+
+    <div class="page-header">
+        <div>
+            <h1>Add Route Schedule</h1>
+            <p>
+                {{ route.name }} —
+                {{ route.start_point }} to {{ route.destination }}
+            </p>
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <h2>Schedule Details</h2>
+
+        <form method="POST" class="employee-form">
+
+            <div class="form-group">
+                <label for="departure_time">Departure Time</label>
+
+                <input
+                    type="time"
+                    id="departure_time"
+                    name="departure_time"
+                    required
+                >
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn btn-primary">
+                    Save Schedule
+                </button>
+
+                <a href="{{ url_for('schedules.list_schedules', route_id=route.id) }}"
+                   class="btn">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+{% endblock %}

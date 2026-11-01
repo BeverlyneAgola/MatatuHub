@@ -1,64 +1,322 @@
-<section class="management-links">
-    <h2>Management Reports</h2>
 
-    <div class="management-grid">
+{% extends "management/management_base.html" %}
 
-        <a href="{{ url_for('management.fleet_allocations') }}"
-           class="management-card">
-            <h3>Fleet & Allocations</h3>
-            <p>View vehicles, assignments, routes, and allocation history.</p>
-        </a>
+{% block title %}Dashboard{% endblock %}
+{% block page_heading %}Management Dashboard{% endblock %}
 
-        <a href="{{ url_for('management.routes_overview') }}"
-           class="management-card">
-            <h3>Routes Overview</h3>
-            <p>Review registered routes, fares, and active allocations.</p>
-        </a>
+{% block content %}
 
-        <a href="{{ url_for('management.outstanding_issues') }}"
-           class="management-card">
-            <h3>Outstanding Issues</h3>
-            <p>Review pending claims, open accidents, and complaints.</p>
-        </a>
-
-        <a href="{{ url_for('management.workforce_overview') }}"
-           class="management-card">
-            <h3>Workforce Overview</h3>
-            <p>Review staff distribution and active driver/conductor assignments.</p>
-        </a>
-
-    </div>
+<section class="mg-intro">
+    <h2>Overview</h2>
+    <p>
+        A summary of the current workforce, fleet, routes,
+        operational issues, and payments recorded today.
+    </p>
 </section>
 
-<style>
-    .management-links {
-        margin-top: 30px;
+<div class="mg-grid">
+
+    <article class="mg-card">
+        <div class="label">Employees</div>
+        <div class="value">{{ statistics.total_employees }}</div>
+        <div class="note">
+            {{ statistics.active_employees }} active ·
+            {{ statistics.fired_employees }} fired
+        </div>
+    </article>
+
+    <article class="mg-card">
+        <div class="label">Vehicles</div>
+        <div class="value">{{ statistics.total_vehicles }}</div>
+        <div class="note">
+            {{ statistics.active_vehicles }} active
+        </div>
+    </article>
+
+    <article class="mg-card">
+        <div class="label">Routes</div>
+        <div class="value">{{ statistics.total_routes }}</div>
+        <div class="note">
+            {{ statistics.active_routes }} active ·
+            {{ statistics.inactive_routes }} inactive
+        </div>
+    </article>
+
+    <article class="mg-card">
+        <div class="label">Active Allocations</div>
+        <div class="value">{{ statistics.active_allocations }}</div>
+        <div class="note">Current vehicle assignments</div>
+    </article>
+
+    <article class="mg-card">
+        <div class="label">Outstanding Issues</div>
+        <div class="value">
+            {{ statistics.pending_claims
+               + statistics.open_accidents
+               + statistics.unresolved_complaints }}
+        </div>
+        <div class="note">Claims, accidents and complaints</div>
+    </article>
+
+    <article class="mg-card">
+        <div class="label">Payments Today</div>
+        <div class="value">{{ statistics.today_payment_count }}</div>
+        <div class="note">
+            {{ statistics.confirmed_payments }} confirmed ·
+            {{ statistics.pending_payments }} pending ·
+            {{ statistics.failed_payments }} failed
+        </div>
+    </article>
+
+</div>
+
+<div class="mg-section-title">
+    <h3>Operational Analytics</h3>
+</div>
+
+<div class="mg-chart-grid">
+
+    <section class="mg-panel">
+        <h3>Vehicle Status</h3>
+        <div class="mg-chart-box">
+            <canvas id="vehicleChart"></canvas>
+        </div>
+    </section>
+
+    <section class="mg-panel">
+        <h3>Employee Status</h3>
+        <div class="mg-chart-box">
+            <canvas id="employeeChart"></canvas>
+        </div>
+    </section>
+
+    <section class="mg-panel">
+        <h3>Route Status</h3>
+        <div class="mg-chart-box">
+            <canvas id="routeChart"></canvas>
+        </div>
+    </section>
+
+    <section class="mg-panel">
+        <h3>Today's Payment Status</h3>
+        <div class="mg-chart-box">
+            <canvas id="paymentChart"></canvas>
+        </div>
+    </section>
+
+    <section class="mg-panel">
+        <h3>Outstanding Issues</h3>
+        <div class="mg-chart-box">
+            <canvas id="issuesChart"></canvas>
+        </div>
+    </section>
+
+    <section class="mg-panel">
+        <h3>Claims Status</h3>
+        <div class="mg-chart-box">
+            <canvas id="claimsChart"></canvas>
+        </div>
+    </section>
+
+</div>
+
+<div class="mg-section-title">
+    <h3>Management Reports</h3>
+</div>
+
+<div class="mg-report-grid">
+
+    <a href="{{ url_for('management.fleet_allocations') }}"
+       class="mg-report-card">
+        <h4>Fleet &amp; Allocations</h4>
+        <p>
+            View vehicles, their current assignments,
+            and allocation history.
+        </p>
+    </a>
+
+    <a href="{{ url_for('management.routes_overview') }}"
+       class="mg-report-card">
+        <h4>Routes Overview</h4>
+        <p>
+            Review registered routes, fares,
+            and active allocations.
+        </p>
+    </a>
+
+    <a href="{{ url_for('management.outstanding_issues') }}"
+       class="mg-report-card">
+        <h4>Outstanding Issues</h4>
+        <p>
+            Review pending claims, open accidents,
+            and unresolved complaints.
+        </p>
+    </a>
+
+    <a href="{{ url_for('management.workforce_overview') }}"
+       class="mg-report-card">
+        <h4>Workforce Overview</h4>
+        <p>
+            Review employee distribution and active
+            driver/conductor assignments.
+        </p>
+    </a>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script id="management-chart-data" type="application/json">
+{
+    "active_vehicles": {{ statistics.active_vehicles | tojson }},
+    "vehicles_under_maintenance": {{ statistics.vehicles_under_maintenance | tojson }},
+    "vehicles_out_of_service": {{ statistics.vehicles_out_of_service | tojson }},
+    "retired_vehicles": {{ statistics.retired_vehicles | tojson }},
+
+    "active_employees": {{ statistics.active_employees | tojson }},
+    "fired_employees": {{ statistics.fired_employees | tojson }},
+
+    "active_routes": {{ statistics.active_routes | tojson }},
+    "inactive_routes": {{ statistics.inactive_routes | tojson }},
+
+    "confirmed_payments": {{ statistics.confirmed_payments | tojson }},
+    "pending_payments": {{ statistics.pending_payments | tojson }},
+    "failed_payments": {{ statistics.failed_payments | tojson }},
+
+    "pending_claims": {{ statistics.pending_claims | tojson }},
+    "open_accidents": {{ statistics.open_accidents | tojson }},
+    "unresolved_complaints": {{ statistics.unresolved_complaints | tojson }},
+
+    "approved_claims": {{ statistics.approved_claims | tojson }},
+    "rejected_claims": {{ statistics.rejected_claims | tojson }}
+}
+</script>
+
+<script>
+    const chartDataElement = document.getElementById(
+        "management-chart-data"
+    );
+
+    const managementStats = JSON.parse(
+        chartDataElement.textContent
+    );
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: "bottom"
+            }
+        }
+    };
+
+    function makeChart(id, type, labels, values) {
+        const canvas = document.getElementById(id);
+
+        if (!canvas || typeof Chart === "undefined") {
+            return;
+        }
+
+        new Chart(canvas, {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Records",
+                    data: values,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                ...chartOptions,
+                scales: type === "bar"
+                    ? {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                    : {}
+            }
+        });
     }
 
-    .management-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 18px;
-    }
+    // Vehicle status chart
+    makeChart(
+        "vehicleChart",
+        "doughnut",
+        ["Active", "Maintenance", "Out of service", "Retired"],
+        [
+            managementStats.active_vehicles,
+            managementStats.vehicles_under_maintenance,
+            managementStats.vehicles_out_of_service,
+            managementStats.retired_vehicles
+        ]
+    );
 
-    .management-card {
-        display: block;
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        text-decoration: none;
-        color: #222;
-        box-shadow: 0 2px 5px #00000010;
-        transition: transform 0.2s;
-    }
+    // Employee status chart
+    makeChart(
+        "employeeChart",
+        "doughnut",
+        ["Active", "Fired"],
+        [
+            managementStats.active_employees,
+            managementStats.fired_employees
+        ]
+    );
 
-    .management-card:hover {
-        transform: translateY(-3px);
-    }
+    // Route status chart
+    makeChart(
+        "routeChart",
+        "doughnut",
+        ["Active", "Inactive"],
+        [
+            managementStats.active_routes,
+            managementStats.inactive_routes
+        ]
+    );
 
-    .management-card h3 {
-        color: #183153;
-        margin-top: 0;
-    }
-</style>
-```
+    // Today's payment status chart
+    makeChart(
+        "paymentChart",
+        "bar",
+        ["Confirmed", "Pending", "Failed"],
+        [
+            managementStats.confirmed_payments,
+            managementStats.pending_payments,
+            managementStats.failed_payments
+        ]
+    );
+
+    // Outstanding issues chart
+    makeChart(
+        "issuesChart",
+        "bar",
+        ["Pending claims", "Open accidents", "Unresolved complaints"],
+        [
+            managementStats.pending_claims,
+            managementStats.open_accidents,
+            managementStats.unresolved_complaints
+        ]
+    );
+
+    // Claims status chart
+    makeChart(
+        "claimsChart",
+        "doughnut",
+        ["Pending", "Approved", "Rejected"],
+        [
+            managementStats.pending_claims,
+            managementStats.approved_claims,
+            managementStats.rejected_claims
+        ]
+    );
+</script>
+
+{% endblock %}

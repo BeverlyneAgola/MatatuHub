@@ -1,153 +1,131 @@
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Complaints - MatatuHub</title>
-</head>
+{% extends "internal_base.html" %}
 
-<body>
+{% block title %}Complaints - MatatuHub{% endblock %}
 
-    <h1>Complaints</h1>
+{% block content %}
 
-    <p>
-        <a href="{{ url_for('hr.new_complaint') }}">
+<section class="hr-page">
+
+    <div class="page-header">
+        <div>
+            <h1>Complaints</h1>
+            <p>View and track recorded complaints.</p>
+        </div>
+
+        <a href="{{ url_for('hr.new_complaint') }}"
+           class="btn btn-primary">
             Record Complaint
         </a>
-    </p>
+    </div>
 
-    <form method="GET">
+    <form method="GET" class="filter-form">
 
-        <label for="category">
-            Category:
-        </label>
+        <div class="form-group">
+            <label for="category">Category:</label>
 
-        <select name="category" id="category">
+            <select name="category" id="category">
+                <option value="">All Categories</option>
 
-            <option value="">
-                All
-            </option>
+                <option
+                    value="internal"
+                    {% if selected_category == "internal" %}
+                        selected
+                    {% endif %}
+                >
+                    Internal
+                </option>
 
-            <option
-                value="internal"
-                {% if selected_category == "internal" %}
-                    selected
-                {% endif %}
-            >
-                Internal
-            </option>
+                <option
+                    value="external"
+                    {% if selected_category == "external" %}
+                        selected
+                    {% endif %}
+                >
+                    External
+                </option>
+            </select>
+        </div>
 
-            <option
-                value="external"
-                {% if selected_category == "external" %}
-                    selected
-                {% endif %}
-            >
-                External
-            </option>
+        <div class="form-group">
+            <label for="status">Status:</label>
 
-        </select>
+            <select name="status" id="status">
+                <option value="">All Statuses</option>
 
+                <option
+                    value="unresolved"
+                    {% if selected_status == "unresolved" %}
+                        selected
+                    {% endif %}
+                >
+                    Unresolved
+                </option>
 
-        <label for="status">
-            Status:
-        </label>
+                <option
+                    value="resolved"
+                    {% if selected_status == "resolved" %}
+                        selected
+                    {% endif %}
+                >
+                    Resolved
+                </option>
+            </select>
+        </div>
 
-        <select name="status" id="status">
-
-            <option value="">
-                All
-            </option>
-
-            <option
-                value="unresolved"
-                {% if selected_status == "unresolved" %}
-                    selected
-                {% endif %}
-            >
-                Unresolved
-            </option>
-
-            <option
-                value="resolved"
-                {% if selected_status == "resolved" %}
-                    selected
-                {% endif %}
-            >
-                Resolved
-            </option>
-
-        </select>
-
-        <button type="submit">
+        <button type="submit" class="btn btn-secondary">
             Filter
         </button>
 
+        <a href="{{ url_for('hr.list_complaints') }}"
+           class="btn btn-secondary">
+            Clear Filters
+        </a>
+
     </form>
 
-    <br>
+    <div class="table-container">
+        <table class="data-table">
 
-    <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Action Taken</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
 
-        <thead>
+            <tbody>
+                {% for complaint in complaints %}
+                    <tr>
+                        <td>{{ complaint.id }}</td>
 
-            <tr>
-                <th>ID</th>
-                <th>Category</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Action Taken</th>
-                <th>Created</th>
-            </tr>
+                        <td>{{ complaint.category }}</td>
 
-        </thead>
+                        <td>{{ complaint.description }}</td>
 
-        <tbody>
+                        <td>{{ complaint.status }}</td>
 
-            {% for complaint in complaints %}
+                        <td>
+                            {{ complaint.action_taken or "—" }}
+                        </td>
 
-            <tr>
+                        <td>{{ complaint.created_at }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6">No complaints found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
 
-                <td>
-                    {{ complaint.id }}
-                </td>
+        </table>
+    </div>
 
-                <td>
-                    {{ complaint.category }}
-                </td>
+</section>
 
-                <td>
-                    {{ complaint.description }}
-                </td>
+{% endblock %}
 
-                <td>
-                    {{ complaint.status }}
-                </td>
-
-                <td>
-                    {{ complaint.action_taken or "—" }}
-                </td>
-
-                <td>
-                    {{ complaint.created_at }}
-                </td>
-
-            </tr>
-
-            {% else %}
-
-            <tr>
-                <td colspan="6">
-                    No complaints found.
-                </td>
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
-</body>
-
-</html>

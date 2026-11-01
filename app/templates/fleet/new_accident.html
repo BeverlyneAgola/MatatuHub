@@ -1,0 +1,68 @@
+
+{% extends "fleet/fleet_base.html" %}
+
+{% block title %}Report Accident - MatatuHub{% endblock %}
+
+{% block fleet_content %}
+<section class="fleet-card">
+    <h2>Report a Vehicle Accident</h2>
+    <p class="fleet-muted">
+        Record the vehicle, driver, date and details of the incident.
+    </p>
+
+    <form method="POST" class="fleet-form">
+        <div>
+            <label for="vehicle_id">Vehicle *</label>
+            <select id="vehicle_id" name="vehicle_id" required>
+                <option value="">Select vehicle</option>
+                {% for vehicle in vehicles %}
+                <option value="{{ vehicle.id }}"
+                    {% if request.form.get('vehicle_id') == vehicle.id|string %}selected{% endif %}>
+                    {{ vehicle.reg_no }} — {{ vehicle.make or "Make not recorded" }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="driver_id">Driver (if known)</label>
+            <select id="driver_id" name="driver_id">
+                <option value="">Select driver</option>
+                {% for driver in drivers %}
+                <option value="{{ driver.id }}"
+                    {% if request.form.get('driver_id') == driver.id|string %}selected{% endif %}>
+                    {{ driver.first_name }} {{ driver.last_name }}
+                    ({{ driver.staff_id }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="date">Date and Time of Accident</label>
+            <input type="datetime-local"
+                   id="date"
+                   name="date"
+                   value="{{ request.form.get('date', '') }}">
+        </div>
+
+        <div>
+            <label for="description">Incident Description *</label>
+            <textarea id="description"
+                      name="description"
+                      required
+                      maxlength="5000">{{ request.form.get('description', '') }}</textarea>
+        </div>
+
+        <div class="fleet-actions">
+            <button type="submit" class="fleet-button">
+                Submit Accident Report
+            </button>
+            <a href="{{ url_for('fleet.list_vehicles') }}"
+               class="fleet-button fleet-button-secondary">
+                Cancel
+            </a>
+        </div>
+    </form>
+</section>
+{% endblock %}

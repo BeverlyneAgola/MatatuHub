@@ -1,288 +1,367 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fleet and Allocations - MatatuHub</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: #f4f6f9;
-            color: #222;
-        }
+{% extends "management/management_base.html" %}
 
-        header {
-            background: #183153;
-            color: white;
-            padding: 20px 30px;
-        }
+{% block title %}Fleet & Allocations{% endblock %}
 
-        header h1 {
-            margin: 0 0 10px;
-        }
+{% block page_heading %}Fleet &amp; Allocations{% endblock %}
 
-        nav a {
-            color: white;
-            margin-right: 18px;
-            text-decoration: none;
-        }
+{% block content %}
 
-        main {
-            padding: 25px;
-        }
+<section class="mg-intro">
+    <h2>Fleet and Allocation Report</h2>
+    <p>
+        Review vehicle status, current assignments,
+        and allocation history.
+    </p>
+</section>
 
-        section {
-            background: white;
-            padding: 20px;
-            margin-bottom: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px #00000010;
-        }
+<div class="mg-grid">
 
-        .table-container {
-            overflow-x: auto;
-        }
+    <article class="mg-card">
+        <div class="label">Vehicles Listed</div>
+        <div class="value">{{ fleet|length }}</div>
+    </article>
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 850px;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background: #e9eef5;
-        }
-
-        .status {
-            font-weight: bold;
-            text-transform: capitalize;
-        }
-
-        .filters {
-            margin-bottom: 15px;
-        }
-
-        select, button {
-            padding: 8px;
-        }
-
-        button {
-            cursor: pointer;
-        }
-
-        .empty {
-            color: #666;
-            padding: 15px 0;
-        }
-
-        .back {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #183153;
-        }
-    </style>
-</head>
-
-<body>
-
-<header>
-    <h1>Fleet and Allocations</h1>
-
-    <nav>
-        <a href="{{ url_for('management.dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('management.fleet_allocations') }}">Fleet & Allocations</a>
-        <a href="{{ url_for('management.routes_overview') }}">Routes</a>
-        <a href="{{ url_for('management.outstanding_issues') }}">Outstanding Issues</a>
-        <a href="{{ url_for('management.workforce_overview') }}">Workforce</a>
-    </nav>
-</header>
-
-<main>
-
-    <a class="back" href="{{ url_for('management.dashboard') }}">
-        &larr; Back to Management Dashboard
-    </a>
-
-    <section>
-        <h2>Vehicle Fleet</h2>
-
-        <p>
-            This table shows registered vehicles and their current active
-            allocations, where available.
-        </p>
-
-        {% if fleet %}
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Registration</th>
-                        <th>Make</th>
-                        <th>Vehicle Type</th>
-                        <th>Vehicle Status</th>
-                        <th>Current Route</th>
-                        <th>Driver</th>
-                        <th>Conductor</th>
-                        <th>Allocation Started</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for item in fleet %}
-                    <tr>
-                        <td>{{ item.vehicle.reg_no }}</td>
-
-                        <td>{{ item.vehicle.make or "Not recorded" }}</td>
-
-                        <td>{{ item.vehicle.type or "Not recorded" }}</td>
-
-                        <td class="status">
-                            {{ item.vehicle.status.replace("_", " ") }}
-                        </td>
-
-                        <td>
-                            {% if item.route %}
-                                {{ item.route.name }}
-                            {% else %}
-                                No active allocation
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            {% if item.driver %}
-                                {{ item.driver.first_name }}
-                                {{ item.driver.last_name }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            {% if item.conductor %}
-                                {{ item.conductor.first_name }}
-                                {{ item.conductor.last_name }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            {% if item.allocation and item.allocation.started_at %}
-                                {{ item.allocation.started_at.strftime("%d %b %Y %H:%M") }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <article class="mg-card">
+        <div class="label">Active Allocations</div>
+        <div class="value">
+            {{ fleet|selectattr('allocation')|list|length }}
         </div>
-        {% else %}
-            <p class="empty">No vehicles have been registered.</p>
-        {% endif %}
-    </section>
+        <div class="note">Vehicles with a current allocation</div>
+    </article>
+
+    <article class="mg-card">
+        <div class="label">Allocation Records</div>
+        <div class="value">{{ allocations|length }}</div>
+        <div class="note">Records matching the selected filter</div>
+    </article>
+
+</div>
 
 
-    <section>
-        <h2>Allocation History</h2>
+<section class="mg-panel">
+    <h3>Vehicle Status Distribution</h3>
 
-        <form class="filters" method="GET"
-              action="{{ url_for('management.fleet_allocations') }}">
+    <div class="mg-chart-box">
+        <canvas id="fleetChart"></canvas>
+    </div>
+</section>
 
-            <label for="status">Filter by allocation status:</label>
 
-            <select name="status" id="status">
-                <option value="all"
-                    {% if selected_status == "all" %}selected{% endif %}>
-                    All allocations
-                </option>
+<div class="mg-section-title">
+    <h3>Fleet Overview</h3>
+</div>
 
-                <option value="active"
-                    {% if selected_status == "active" %}selected{% endif %}>
-                    Active
-                </option>
 
-                <option value="ended"
-                    {% if selected_status == "ended" %}selected{% endif %}>
-                    Ended
-                </option>
-            </select>
+<div class="mg-panel">
 
-            <button type="submit">Apply Filter</button>
-        </form>
+    <div class="mg-table-wrap">
 
-        {% if allocations %}
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Vehicle</th>
-                        <th>Route</th>
-                        <th>Driver</th>
-                        <th>Conductor</th>
-                        <th>Status</th>
-                        <th>Started At</th>
-                        <th>Ended At</th>
-                    </tr>
-                </thead>
+        <table class="mg-table">
 
-                <tbody>
-                    {% for item in allocations %}
-                    <tr>
-                        <td>{{ item.vehicle.reg_no }}</td>
+            <thead>
+                <tr>
+                    <th>Registration</th>
+                    <th>Make</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Current Route</th>
+                    <th>Driver</th>
+                    <th>Conductor</th>
+                    <th>Allocation Started</th>
+                </tr>
+            </thead>
 
-                        <td>{{ item.route.name }}</td>
+            <tbody>
 
-                        <td>
-                            {{ item.driver.first_name }}
-                            {{ item.driver.last_name }}
-                        </td>
+                {% for item in fleet %}
 
-                        <td>
-                            {{ item.conductor.first_name }}
-                            {{ item.conductor.last_name }}
-                        </td>
+                <tr>
 
-                        <td class="status">
-                            {{ item.allocation.status }}
-                        </td>
+                    <td>
+                        {{ item.vehicle.reg_no }}
+                    </td>
 
-                        <td>
-                            {% if item.allocation.started_at %}
-                                {{ item.allocation.started_at.strftime("%d %b %Y %H:%M") }}
+                    <td>
+                        {{ item.vehicle.make or '—' }}
+                    </td>
+
+                    <td>
+                        {{ item.vehicle.vehicle_type or '—' }}
+                    </td>
+
+                    <td>
+                        <span class="mg-status">
+                            {{ item.vehicle.status|replace('_', ' ')|title }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ item.route.name if item.route else 'Not allocated' }}
+                    </td>
+
+                    <td>
+                        {% if item.driver %}
+
+                            {% if item.driver.full_name is defined %}
+                                {{ item.driver.full_name }}
+                            {% elif item.driver.name is defined %}
+                                {{ item.driver.name }}
                             {% else %}
                                 —
                             {% endif %}
-                        </td>
 
-                        <td>
-                            {% if item.allocation.ended_at %}
-                                {{ item.allocation.ended_at.strftime("%d %b %Y %H:%M") }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if item.conductor %}
+
+                            {% if item.conductor.full_name is defined %}
+                                {{ item.conductor.full_name }}
+                            {% elif item.conductor.name is defined %}
+                                {{ item.conductor.name }}
                             {% else %}
                                 —
                             {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-            <p class="empty">No allocations match the selected filter.</p>
-        {% endif %}
-    </section>
 
-</main>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
 
-</body>
-</html>
+                    <td>
+                        {% if item.allocation and item.allocation.started_at %}
+                            {{ item.allocation.started_at.strftime('%d %b %Y') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
 
+                </tr>
+
+                {% else %}
+
+                <tr>
+                    <td colspan="8">
+                        <div class="mg-empty">
+                            No vehicles found.
+                        </div>
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<div class="mg-section-title">
+    <h3>Allocation History</h3>
+</div>
+
+
+<div class="mg-panel">
+
+    <form class="mg-filter" method="get">
+
+        <label for="allocation-status">
+            Allocation status
+        </label>
+
+        <select id="allocation-status" name="status">
+
+            <option value="all"
+                {% if selected_status == 'all' %}selected{% endif %}>
+                All
+            </option>
+
+            <option value="active"
+                {% if selected_status == 'active' %}selected{% endif %}>
+                Active
+            </option>
+
+            <option value="ended"
+                {% if selected_status == 'ended' %}selected{% endif %}>
+                Ended
+            </option>
+
+        </select>
+
+        <button type="submit" class="mg-button">
+            Apply Filter
+        </button>
+
+    </form>
+
+
+    <div class="mg-table-wrap">
+
+        <table class="mg-table">
+
+            <thead>
+                <tr>
+                    <th>Vehicle</th>
+                    <th>Route</th>
+                    <th>Driver</th>
+                    <th>Conductor</th>
+                    <th>Started</th>
+                    <th>Ended</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for item in allocations %}
+
+                <tr>
+
+                    <td>
+                        {{ item.vehicle.reg_no }}
+                    </td>
+
+                    <td>
+                        {{ item.route.name if item.route else '—' }}
+                    </td>
+
+                    <td>
+                        {% if item.driver %}
+
+                            {% if item.driver.full_name is defined %}
+                                {{ item.driver.full_name }}
+                            {% elif item.driver.name is defined %}
+                                {{ item.driver.name }}
+                            {% else %}
+                                —
+                            {% endif %}
+
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if item.conductor %}
+
+                            {% if item.conductor.full_name is defined %}
+                                {{ item.conductor.full_name }}
+                            {% elif item.conductor.name is defined %}
+                                {{ item.conductor.name }}
+                            {% else %}
+                                —
+                            {% endif %}
+
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if item.allocation and item.allocation.started_at %}
+                            {{ item.allocation.started_at.strftime('%d %b %Y') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if item.allocation and item.allocation.ended_at %}
+                            {{ item.allocation.ended_at.strftime('%d %b %Y') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+
+                        {% if item.allocation and item.allocation.ended_at %}
+                            <span class="mg-status">
+                                Ended
+                            </span>
+                        {% else %}
+                            <span class="mg-status">
+                                Active
+                            </span>
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+                    <td colspan="7">
+                        <div class="mg-empty">
+                            No allocation records found.
+                        </div>
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script id="fleet-chart-data" type="application/json">
+[
+    {% for item in fleet %}
+        {{ item.vehicle.status|tojson }}{% if not loop.last %},{% endif %}
+    {% endfor %}
+]
+</script>
+
+<script>
+    const fleetChartData = JSON.parse(
+        document.getElementById("fleet-chart-data").textContent
+    );
+
+    const statusCounts = {};
+
+    fleetChartData.forEach(function(status) {
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+
+    const labels = Object.keys(statusCounts);
+    const values = Object.values(statusCounts);
+
+    const fleetChartElement = document.getElementById("fleetChart");
+
+    if (fleetChartElement && labels.length > 0) {
+        new Chart(fleetChartElement, {
+            type: "doughnut",
+            data: {
+                labels: labels.map(function(label) {
+                    return label.replaceAll("_", " ");
+                }),
+                datasets: [{
+                    data: values
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+</script>
+
+{% endblock %}

@@ -13,6 +13,8 @@ from app.models import (
     Allocation,
     Complaint,
     PaymentLog,
+    Department,
+    Role,
 )
 
 
@@ -245,7 +247,9 @@ def get_allocation_overview(status=None):
     )
 
     if status in ("active", "ended"):
-        query = query.filter(Allocation.status == status)
+        query = query.filter(
+            Allocation.status == status
+        )
 
     rows = query.order_by(
         Allocation.started_at.desc()
@@ -274,7 +278,9 @@ def get_allocation_overview(status=None):
 # --------------------------------------------------
 
 def get_routes_overview():
-    routes = Route.query.order_by(Route.name.asc()).all()
+    routes = Route.query.order_by(
+        Route.name.asc()
+    ).all()
 
     route_data = []
 
@@ -364,10 +370,11 @@ def get_workforce_overview():
     department_counts = {}
 
     for department_id, count in department_rows:
-        department = db.session.get(
-            __import__("app.models", fromlist=["Department"]).Department,
-            department_id
-        ) if department_id is not None else None
+        department = (
+            db.session.get(Department, department_id)
+            if department_id is not None
+            else None
+        )
 
         department_name = (
             department.name if department
@@ -389,10 +396,11 @@ def get_workforce_overview():
     role_counts = {}
 
     for role_id, count in role_rows:
-        role = db.session.get(
-            __import__("app.models", fromlist=["Role"]).Role,
-            role_id
-        ) if role_id is not None else None
+        role = (
+            db.session.get(Role, role_id)
+            if role_id is not None
+            else None
+        )
 
         role_name = role.name if role else "Unassigned"
 
@@ -456,4 +464,3 @@ def get_workforce_overview():
         "role_counts": role_counts,
         "active_assignments": active_assignments,
     }
-

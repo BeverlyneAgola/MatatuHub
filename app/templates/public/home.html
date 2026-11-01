@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}
+    MatatuHub | Home
+{% endblock %}
+
+
+{% block content %}
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <p class="hero-label">
+            MATATU MANAGEMENT INFORMATION SYSTEM
+        </p>
+
+        <h1>
+            Smarter Management.
+            Better Operations.
+        </h1>
+
+        <p class="hero-text">
+            MatatuHub provides a centralized platform for
+            managing staff, vehicles, routes, operations,
+            finance, and organizational information.
+        </p>
+
+        <div class="hero-actions">
+
+            <a
+                href="{{ url_for('public.about') }}"
+                class="btn btn-primary"
+            >
+                Learn More
+            </a>
+
+            <a
+                href="{{ url_for('auth.login') }}"
+                class="btn btn-secondary"
+            >
+                Staff Login
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="intro-section">
+
+    <div class="section-container">
+
+        <p class="section-label">
+            ABOUT MATATUHUB
+        </p>
+
+        <h2>
+            Bringing matatu management into one system.
+        </h2>
+
+        <p>
+            MatatuHub is designed to help a matatu Sacco
+            organize its information and day-to-day
+            activities through a centralized web-based
+            management system.
+        </p>
+
+    </div>
+
+</section>
+
+
+<section class="values-section">
+
+    <div class="section-container">
+
+        <div class="section-heading">
+
+            <p class="section-label">
+                WHAT WE STAND FOR
+            </p>
+
+            <h2>
+                Our Vision, Mission and Purpose
+            </h2>
+
+        </div>
+
+
+        <div class="card-grid">
+
+            <div class="info-card">
+
+                <h3>Our Vision</h3>
+
+                <p>
+                    To support efficient, organized and
+                    accountable matatu operations through
+                    accessible information systems.
+                </p>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <h3>Our Mission</h3>
+
+                <p>
+                    To provide a centralized platform that
+                    improves the management of people,
+                    vehicles, operations and organizational
+                    information.
+                </p>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <h3>Our Purpose</h3>
+
+                <p>
+                    To make important operational information
+                    easier to manage, access and use for
+                    better decision-making.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="cta-section">
+
+    <div class="section-container">
+
+        <h2>
+            Need to reach management?
+        </h2>
+
+        <p>
+            Find out how to get in touch with the MatatuHub
+            management team.
+        </p>
+
+        <a
+            href="{{ url_for('public.contact') }}"
+            class="btn btn-primary"
+        >
+            Contact Us
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}

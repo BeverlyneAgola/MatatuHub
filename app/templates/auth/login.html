@@ -1,51 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>MatatuHub Login</title>
-</head>
+{% block title %}Staff Login | MatatuHub{% endblock %}
 
-<body>
+{% block flash_messages %}
 
-    <h1>MatatuHub Login</h1>
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div>
-                {{ messages[0] }}
+{% with messages = get_flashed_messages(category_filter=["login"]) %}
+    {% if messages %}
+        <div class="flash-container">
+
+            {% for message in messages %}
+                <div class="flash-message">
+                    {{ message }}
+                </div>
+            {% endfor %}
+
+        </div>
+    {% endif %}
+{% endwith %}
+
+
+{% endblock %}
+
+{% block content %}
+
+
+<section class="login-section">
+
+    <div class="login-container">
+
+        <h1>MatatuHub Login</h1>
+
+        <form method="POST">
+
+            <div class="form-group">
+                <label for="username">Username</label>
+
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    required
+                    autocomplete="username"
+                >
             </div>
-        {% endif %}
-    {% endwith %}
 
-    <form method="POST">
+            <div class="form-group">
+                <label for="password">Password</label>
 
-        <div>
-            <label for="username">Username</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    autocomplete="current-password"
+                >
+            </div>
 
-            <input
-                type="text"
-                id="username"
-                name="username"
-                required
-            >
-        </div>
+            <button type="submit">Log In</button>
 
-        <div>
-            <label for="password">Password</label>
+        </form>
 
-            <input
-                type="password"
-                id="password"
-                name="password"
-                required
-            >
-        </div>
+    </div>
 
-        <button type="submit">Log In</button>
+</section>
 
-    </form>
 
-</body>
-
-</html>
+{% endblock %}

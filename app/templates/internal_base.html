@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}MatatuHub Staff Portal{% endblock %}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="internal-page">
+
+<header class="internal-header">
+    <div class="internal-header-container">
+
+        <a href="{{ url_for('auth.dashboard_redirect') }}"
+           class="internal-logo">
+            MatatuHub
+        </a>
+
+        <div class="internal-user">
+            <span>
+                {{ current_user.employee.first_name }}
+                {{ current_user.employee.last_name }}
+            </span>
+
+            <span class="internal-role">
+                {{ current_user.employee.role.name }}
+            </span>
+
+            <a href="{{ url_for('auth.logout') }}"
+               class="internal-logout">
+                Logout
+            </a>
+        </div>
+
+    </div>
+</header>
+
+<div class="internal-layout">
+
+    <aside class="internal-sidebar">
+
+        {% set role = current_user.employee.role.name %}
+
+        <!-- MANAGEMENT -->
+        {% if role in ["General Manager", "Deputy General Manager"] %}
+            <div class="sidebar-heading">Management</div>
+
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('management.dashboard') }}"
+                   class="{% if request.endpoint == 'management.dashboard' %}active{% endif %}">
+                    Dashboard
+                </a>
+
+                <a href="{{ url_for('management.fleet_allocations') }}"
+                   class="{% if request.endpoint == 'management.fleet_allocations' %}active{% endif %}">
+                    Fleet Allocations
+                </a>
+
+                <a href="{{ url_for('management.routes_overview') }}"
+                   class="{% if request.endpoint == 'management.routes_overview' %}active{% endif %}">
+                    Routes Overview
+                </a>
+
+                <a href="{{ url_for('management.outstanding_issues') }}"
+                   class="{% if request.endpoint == 'management.outstanding_issues' %}active{% endif %}">
+                    Outstanding Issues
+                </a>
+
+                <a href="{{ url_for('management.workforce_overview') }}"
+                   class="{% if request.endpoint == 'management.workforce_overview' %}active{% endif %}">
+                    Workforce Overview
+                </a>
+            </nav>
+
+        <!-- SYSTEM ADMINISTRATION -->
+        {% elif role == "System Administrator" %}
+            <div class="sidebar-heading">System Administration</div>
+
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin.users') }}"
+                   class="{% if request.endpoint == 'admin.users' %}active{% endif %}">
+                    User Accounts
+                </a>
+
+                <a href="{{ url_for('admin.roles') }}"
+                   class="{% if request.endpoint == 'admin.roles' %}active{% endif %}">
+                    Roles
+                </a>
+
+                <a href="{{ url_for('admin.audit_log') }}"
+                   class="{% if request.endpoint == 'admin.audit_log' %}active{% endif %}">
+                    Audit Log
+                </a>
+            </nav>
+
+        <!-- HUMAN RESOURCES -->
+        {% elif role == "HR Manager" %}
+            <div class="sidebar-heading">Human Resources</div>
+
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('hr.list_employees') }}"
+                   class="{% if request.endpoint == 'hr.list_employees' %}active{% endif %}">
+                    Employee List
+                </a>
+
+                <a href="{{ url_for('hr.new_employee') }}"
+                   class="{% if request.endpoint == 'hr.new_employee' %}active{% endif %}">
+                    Register Employee
+                </a>
+
+                <a href="{{ url_for('hr.list_complaints') }}"
+                   class="{% if request.endpoint == 'hr.list_complaints' %}active{% endif %}">
+                    Complaints
+                </a>
+
+                <a href="{{ url_for('hr.new_complaint') }}"
+                   class="{% if request.endpoint == 'hr.new_complaint' %}active{% endif %}">
+                    Record Complaint
+                </a>
+            </nav>
+
+        <!-- OPERATIONS -->
+        {% elif role in ["Operations Manager", "Operations Officer"] %}
+            <div class="sidebar-heading">Operations</div>
+
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('operations.list_routes') }}"
+                   class="{% if request.endpoint in ['operations.list_routes', 'operations.new_route', 'operations.view_route'] %}active{% endif %}">
+                    Routes
+                </a>
+
+                <a href="{{ url_for('operations.list_routes') }}">
+                    Route Schedules
+                </a>
+            </nav>
+
+        <!-- FLEET -->
+        {% elif role in ["Fleet Manager", "Fleet Officer", "Inspector"] %}
+            <div class="sidebar-heading">Fleet Management</div>
+
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('fleet.list_vehicles') }}"
+                   class="{% if request.endpoint in ['fleet.list_vehicles', 'fleet.new_vehicle', 'fleet.view_vehicle'] %}active{% endif %}">
+                    Vehicles
+                </a>
+
+                {% if role == "Fleet Manager" %}
+                    <a href="{{ url_for('fleet.new_allocation') }}"
+                       class="{% if request.endpoint == 'fleet.new_allocation' %}active{% endif %}">
+                        New Allocation
+                    </a>
+
+                    <a href="{{ url_for('fleet.vehicle_documents', vehicle_id=1) }}"
+                       class="{% if request.endpoint == 'fleet.vehicle_documents' %}active{% endif %}">
+                        Vehicle Documents
+                    </a>
+
+                    <a href="{{ url_for('fleet.vehicle_maintenance', vehicle_id=1) }}"
+                       class="{% if request.endpoint == 'fleet.vehicle_maintenance' %}active{% endif %}">
+                        Vehicle Maintenance
+                    </a>
+                {% endif %}
+
+                {% if role == "Inspector" %}
+                    <a href="{{ url_for('fleet.new_accident') }}"
+                       class="{% if request.endpoint == 'fleet.new_accident' %}active{% endif %}">
+                        Record Accident
+                    </a>
+                {% endif %}
+            </nav>
+
+        <!-- FINANCE -->
+        {% elif role in ["Finance Manager", "Accountant", "Finance Officer", "Payroll Officer"] %}
+
+    <div class="sidebar-heading">Finance</div>
+
+    <nav class="sidebar-nav">
+
+        {% if role in ["Finance Manager", "Payroll Officer"] %}
+            <a href="{{ url_for('finance.list_payroll') }}"
+               class="{% if request.endpoint in ['finance.list_payroll', 'finance.new_payroll'] %}active{% endif %}">
+                Payroll
+            </a>
+        {% endif %}
+
+
+        <a href="{{ url_for('finance.list_claims') }}"
+           class="{% if request.endpoint == 'finance.list_claims' %}active{% endif %}">
+            Claims
+        </a>
+
+
+        {% if role in ["Finance Manager", "Accountant"] %}
+            <a href="{{ url_for('finance.list_budgets') }}"
+               class="{% if request.endpoint in ['finance.list_budgets', 'finance.new_budget', 'finance.edit_budget'] %}active{% endif %}">
+                Budgets
+            </a>
+        {% endif %}
+
+
+        <a href="{{ url_for('finance.collections_report') }}"
+           class="{% if request.endpoint == 'finance.collections_report' %}active{% endif %}">
+            Collections
+        </a>
+
+    </nav>
+        <!-- DRIVER -->
+        {% elif role == "Driver" %}
+            <div class="sidebar-heading">Driver Portal</div>
+
+            <a href="{{ url_for('driver.my_assignment') }}">
+                My Assignment
+            </a>
+
+            <a href="{{ url_for('driver.new_trip_log') }}">
+                Record Trip Log
+            </a>
+
+            <a href="{{ url_for('driver.my_trip_logs') }}">
+                My Trip Logs
+            </a>
+
+        <!-- DRIVER OPERATIONS -->
+        {% elif role == "Driver Operations Supervisor" %}
+            <div class="sidebar-heading">Driver Operations</div>
+
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('driver_operations.index') }}"
+                   class="{% if request.endpoint == 'driver_operations.index' %}active{% endif %}">
+                    Overview
+                </a>
+
+                <a href="{{ url_for('driver_operations.list_drivers') }}"
+                   class="{% if request.endpoint == 'driver_operations.list_drivers' %}active{% endif %}">
+                    Drivers
+                </a>
+
+                <a href="{{ url_for('driver_operations.list_trip_logs') }}"
+                   class="{% if request.endpoint in ['driver_operations.list_trip_logs', 'driver_operations.view_trip_log'] %}active{% endif %}">
+                    Trip Logs
+                </a>
+            </nav>
+
+        <!-- CONDUCTOR -->
+        {% elif role == "Conductor" %}
+            <div class="sidebar-heading">Conductor Portal</div>
+
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('conductor.my_assignment') }}"
+                   class="{% if request.endpoint == 'conductor.my_assignment' %}active{% endif %}">
+                    My Assignment
+                </a>
+
+                <a href="{{ url_for('conductor.new_payment_log') }}"
+                   class="{% if request.endpoint == 'conductor.new_payment_log' %}active{% endif %}">
+                    Record Payment
+                </a>
+            </nav>
+
+        <!-- CONDUCTOR OPERATIONS -->
+        {% elif role == "Conductor Operations Supervisor" %}
+            <div class="sidebar-heading">Conductor Operations</div>
+
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('conductor_operations.index') }}"
+                   class="{% if request.endpoint == 'conductor_operations.index' %}active{% endif %}">
+                    Overview
+                </a>
+
+                <a href="{{ url_for('conductor_operations.list_conductors') }}"
+                   class="{% if request.endpoint == 'conductor_operations.list_conductors' %}active{% endif %}">
+                    Conductors
+                </a>
+
+                <a href="{{ url_for('conductor_operations.list_payment_logs') }}"
+                   class="{% if request.endpoint in ['conductor_operations.list_payment_logs', 'conductor_operations.view_payment_log'] %}active{% endif %}">
+                    Payment Logs
+                </a>
+            </nav>
+
+        {% endif %}
+
+    </aside>
+
+    <main class="internal-content">
+
+        {% block flash_messages %}
+            {% set endpoint = request.endpoint or "" %}
+
+            {% if endpoint.startswith("hr.") %}
+                {% with messages = get_flashed_messages(category_filter=["hr"]) %}
+                    {% if messages %}
+                        <div class="flash-container">
+                            {% for message in messages %}
+                                <div class="flash-message">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+            {% elif endpoint.startswith("admin.") %}
+                {% with messages = get_flashed_messages(category_filter=["success", "error"]) %}
+                    {% if messages %}
+                        <div class="flash-container">
+                            {% for message in messages %}
+                                <div class="flash-message">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+            {% elif endpoint.startswith("finance.") %}
+                {% with messages = get_flashed_messages(category_filter=["success", "error"]) %}
+                    {% if messages %}
+                        <div class="flash-container">
+                            {% for message in messages %}
+                                <div class="flash-message">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+        {% endblock %}
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+</div>
+
+<footer class="internal-footer">
+    <p>&copy; 2026 MatatuHub. All rights reserved.</p>
+</footer>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

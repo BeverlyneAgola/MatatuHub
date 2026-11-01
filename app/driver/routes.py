@@ -29,7 +29,7 @@ driver_bp = Blueprint(
 
 
 # ============================================================
-# DRIVER ASSIGNMENT
+# MY ASSIGNMENT
 # ============================================================
 
 @driver_bp.route("/my-assignment")
@@ -47,25 +47,19 @@ def my_assignment():
         else (None, None)
     )
 
-    trip_logs = get_driver_trip_logs(employee_id)
-
     return render_template(
-        "driver/my_assignment.html",
+        "driver/assignment.html",
         allocation=allocation,
         vehicle=vehicle,
         route=route,
-        trip_logs=trip_logs,
     )
 
 
 # ============================================================
-# DRIVER TRIP LOGGING
+# RECORD A NEW TRIP
 # ============================================================
 
-@driver_bp.route(
-    "/trip-logs/new",
-    methods=["GET", "POST"]
-)
+@driver_bp.route("/trip-logs/new", methods=["GET", "POST"])
 @login_required
 @role_required("Driver")
 def new_trip_log():
@@ -74,14 +68,24 @@ def new_trip_log():
 
     allocation = get_driver_active_assignment(employee_id)
 
+    # A driver must have an active allocation before
+    # recording a trip.
+
     if not allocation:
+
         flash(
-            "You do not have an active vehicle allocation."
+            "You cannot record a trip because you do not "
+            "currently have an active vehicle allocation.",
+            "warning",
         )
 
         return redirect(
             url_for("driver.my_assignment")
         )
+
+    vehicle, route = get_driver_assignment_details(allocation)
+
+    # PROCESS FORM SUBMISSION
 
     if request.method == "POST":
 
@@ -97,29 +101,52 @@ def new_trip_log():
         )
 
         if error:
-            flash(error)
+
+            flash(error, "danger")
 
             return redirect(
-                url_for("driver.my_assignment")
+                url_for("driver.new_trip_log")
             )
 
         log_action(
             "Created driver trip log",
             "trip_logs",
-            trip.id
+            trip.id,
         )
 
-        flash("Trip logged successfully.")
+        flash(
+            "Trip recorded successfully.",
+            "success",
+        )
 
         return redirect(
-            url_for("driver.my_assignment")
+            url_for("driver.my_trip_logs")
         )
 
-    vehicle, route = get_driver_assignment_details(allocation)
+    # DISPLAY THE RECORDING FORM
 
     return render_template(
         "driver/new_trip_log.html",
         allocation=allocation,
         vehicle=vehicle,
         route=route,
+    )
+
+
+# ============================================================
+# MY TRIP HISTORY
+# ============================================================
+
+@driver_bp.route("/trip-logs")
+@login_required
+@role_required("Driver")
+def my_trip_logs():
+
+    employee_id = current_user.employee.id
+
+    trip_logs = get_driver_trip_logs(employee_id)
+
+    return render_template(
+        "driver/trip_logs.html",
+        trip_logs=trip_logs,
     )

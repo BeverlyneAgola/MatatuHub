@@ -1,78 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>New Route - MatatuHub</title>
-</head>
+{% extends "internal_base.html" %}
 
-<body>
+{% block title %}New Route | MatatuHub{% endblock %}
 
-    <h1>New Route</h1>
+{% block content %}
+<div class="hr-page">
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div>
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
+    <div class="page-header">
+        <div>
+            <h1>Register New Route</h1>
+            <p>Enter the details of the new transport route.</p>
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <form method="POST" class="employee-form">
+
+            <div class="form-group">
+                <label for="name">Route Name</label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                >
             </div>
-        {% endif %}
-    {% endwith %}
 
-    <form method="POST">
+            <div class="form-group">
+                <label for="start_point">Start Point</label>
+                <input
+                    type="text"
+                    id="start_point"
+                    name="start_point"
+                    required
+                >
+            </div>
 
-        <div>
-            <label for="name">Route Name</label><br>
+            <div class="form-group">
+                <label for="destination">Destination</label>
+                <input
+                    type="text"
+                    id="destination"
+                    name="destination"
+                    required
+                >
+            </div>
 
-            <input
-                type="text"
-                id="name"
-                name="name"
-                required
-            >
-        </div>
+            <button type="submit" class="btn btn-primary">
+                Create Route
+            </button>
 
-        <br>
+            <a href="{{ url_for('operations.list_routes') }}" class="btn">
+                Cancel
+            </a>
 
-        <div>
-            <label for="start_point">Start Point</label><br>
+        </form>
+    </div>
 
-            <input
-                type="text"
-                id="start_point"
-                name="start_point"
-                required
-            >
-        </div>
-
-        <br>
-
-        <div>
-            <label for="destination">Destination</label><br>
-
-            <input
-                type="text"
-                id="destination"
-                name="destination"
-                required
-            >
-        </div>
-
-        <br>
-
-        <button type="submit">
-            Create Route
-        </button>
-
-    </form>
-
-    <p>
-        <a href="{{ url_for('operations.list_routes') }}">
-            Back to Routes
-        </a>
-    </p>
-
-</body>
-
-</html>
+</div>
+{% endblock %}

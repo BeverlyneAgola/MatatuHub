@@ -1,72 +1,121 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Trip Details - MatatuHub</title>
-</head>
-<body>
+{% extends "internal_base.html" %}
 
-    <h1>Trip Record #{{ trip_log.id }}</h1>
+{% block title %}Trip Details - MatatuHub{% endblock %}
 
-    <p>
-        <a href="{{ url_for('driver_operations.list_trip_logs') }}">
-            Back to Trip Logs
-        </a>
-    </p>
+{% block content %}
 
-    <h2>Driver Information</h2>
+<div class="page-header">
+    <div>
+        <h1>Trip Record #{{ trip_log.id }}</h1>
+        <p>Detailed information about the selected driver trip.</p>
+    </div>
 
-    {% if driver %}
+    <a href="{{ url_for('driver_operations.list_trip_logs') }}"
+       class="btn btn-secondary">
+        Back to Trip Logs
+    </a>
+</div>
+
+
+<div class="card">
+
+    <div class="card-header">
+        <h2>Driver Information</h2>
+    </div>
+
+    <div class="card-body">
+
+        {% if driver %}
+
+            <p>
+                <strong>Staff ID:</strong>
+                {{ driver.staff_id }}
+            </p>
+
+            <p>
+                <strong>Name:</strong>
+                {{ driver.first_name }} {{ driver.last_name }}
+            </p>
+
+        {% else %}
+
+            <p>Driver information is unavailable.</p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<div class="card">
+
+    <div class="card-header">
+        <h2>Assignment Information</h2>
+    </div>
+
+    <div class="card-body">
+
+        {% if allocation %}
+
+            <p>
+                <strong>Allocation ID:</strong>
+                {{ allocation.id }}
+            </p>
+
+            <p>
+                <strong>Vehicle:</strong>
+                {{ vehicle.reg_no if vehicle else 'Unavailable' }}
+            </p>
+
+            <p>
+                <strong>Route:</strong>
+                {{ route.name if route else 'Unavailable' }}
+            </p>
+
+        {% else %}
+
+            <p>Assignment information is unavailable.</p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<div class="card">
+
+    <div class="card-header">
+        <h2>Trip Information</h2>
+    </div>
+
+    <div class="card-body">
+
         <p>
-            <strong>Staff ID:</strong>
-            {{ driver.staff_id }}
+            <strong>Trip ID:</strong>
+            {{ trip_log.id }}
         </p>
 
         <p>
-            <strong>Name:</strong>
-            {{ driver.first_name }} {{ driver.last_name }}
-        </p>
-    {% else %}
-        <p>Driver information is unavailable.</p>
-    {% endif %}
-
-    <h2>Assignment Information</h2>
-
-    {% if allocation %}
-        <p>
-            <strong>Allocation ID:</strong>
-            {{ allocation.id }}
+            <strong>Start Time:</strong>
+            {{ trip_log.start_time.strftime('%Y-%m-%d %H:%M')
+               if trip_log.start_time else '—' }}
         </p>
 
         <p>
-            <strong>Vehicle:</strong>
-            {{ vehicle.reg_no if vehicle else 'Unavailable' }}
+            <strong>End Time:</strong>
+            {{ trip_log.end_time.strftime('%Y-%m-%d %H:%M')
+               if trip_log.end_time else 'In Progress' }}
         </p>
 
         <p>
-            <strong>Route:</strong>
-            {{ route.name if route else 'Unavailable' }}
+            <strong>Notes:</strong>
+            {{ trip_log.notes or 'No notes recorded.' }}
         </p>
-    {% else %}
-        <p>Assignment information is unavailable.</p>
-    {% endif %}
 
-    <h2>Trip Information</h2>
+    </div>
 
-    <p>
-        <strong>Start Time:</strong>
-        {{ trip_log.start_time.strftime('%Y-%m-%d %H:%M') if trip_log.start_time else '—' }}
-    </p>
+</div>
 
-    <p>
-        <strong>End Time:</strong>
-        {{ trip_log.end_time.strftime('%Y-%m-%d %H:%M') if trip_log.end_time else 'In Progress' }}
-    </p>
-
-    <p>
-        <strong>Notes:</strong>
-        {{ trip_log.notes or 'No notes recorded.' }}
-    </p>
-
-</body>
-</html>
+{% endblock %}

@@ -1,67 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Driver Operations Dashboard - MatatuHub</title>
-</head>
-<body>
+{% extends "internal_base.html" %}
 
-    <h1>Driver Operations Supervisor Dashboard</h1>
+{% block title %}Driver Operations Dashboard - MatatuHub{% endblock %}
 
-    <p>Welcome to Driver Operations monitoring.</p>
+{% block content %}
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div>
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
+<div class="page-header">
+    <div>
+        <h1>Driver Operations</h1>
+        <p>Monitor active drivers, vehicle assignments and trip records.</p>
+    </div>
+</div>
 
-    <h2>Overview</h2>
+<div class="dashboard-stats">
 
-    <table border="1" cellpadding="8">
-        <thead>
-            <tr>
-                <th>Metric</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Active Drivers</td>
-                <td>{{ drivers|length }}</td>
-            </tr>
-            <tr>
-                <td>Active Driver Allocations</td>
-                <td>{{ active_allocations }}</td>
-            </tr>
-            <tr>
-                <td>Driver Trip Logs</td>
-                <td>{{ total_trip_logs }}</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="stat-card">
+        <h3>Active Drivers</h3>
+        <p class="stat-number">{{ drivers|length }}</p>
+    </div>
 
-    <h2>Navigation</h2>
+    <div class="stat-card">
+        <h3>Active Allocations</h3>
+        <p class="stat-number">{{ active_allocations }}</p>
+    </div>
 
-    <ul>
-        <li>
-            <a href="{{ url_for('driver_operations.list_drivers') }}">
-                View Drivers
+    <div class="stat-card">
+        <h3>Total Trip Logs</h3>
+        <p class="stat-number">{{ total_trip_logs }}</p>
+    </div>
+
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Driver Operations Navigation</h2>
+    </div>
+
+    <div class="card-body">
+
+        <div class="action-buttons">
+
+            <a href="{{ url_for('driver_operations.list_drivers') }}"
+               class="btn btn-primary">
+                View Active Drivers
             </a>
-        </li>
-        <li>
-            <a href="{{ url_for('driver_operations.list_trip_logs') }}">
-                View Driver Trip Logs
-            </a>
-        </li>
-        <li>
-            <a href="{{ url_for('auth.logout') }}">Logout</a>
-        </li>
-    </ul>
 
-</body>
-</html>
+            <a href="{{ url_for('driver_operations.list_trip_logs') }}"
+               class="btn btn-secondary">
+                View Trip Logs
+            </a>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

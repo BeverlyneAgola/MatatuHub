@@ -1,19 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Admin - Roles</title>
-</head>
-<body>
+{% extends "internal_base.html" %}
 
-    <h1>System Roles</h1>
+{% block title %}System Roles - MatatuHub{% endblock %}
 
-    <p>
-        <a href="{{ url_for('admin.users') }}">Users</a> |
-        <a href="{{ url_for('admin.audit_log') }}">Audit Log</a>
-    </p>
+{% block content %}
 
-    <table border="1">
+<section class="hr-page">
+
+
+<div class="page-header">
+    <div>
+        <h1>System Roles</h1>
+        <p>View the roles assigned across the organization.</p>
+    </div>
+</div>
+
+<nav class="admin-navigation">
+    <a href="{{ url_for('admin.users') }}">Users</a>
+
+    <a href="{{ url_for('admin.roles') }}"
+       class="active">System Roles</a>
+
+    <a href="{{ url_for('admin.audit_log') }}">Audit Log</a>
+</nav>
+
+<div class="table-container">
+    <table class="data-table">
         <thead>
             <tr>
                 <th>ID</th>
@@ -29,9 +40,15 @@
                 <td>{{ role.name }}</td>
                 <td>{{ role.department.name }}</td>
             </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">No system roles found.</td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
+</div>
 
-</body>
-</html>
+
+</section>
+{% endblock %}

@@ -1,92 +1,55 @@
-html
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Fleet Vehicles - MatatuHub</title>
-</head>
+{% extends "fleet/fleet_base.html" %}
 
-<body>
+{% block title %}Vehicles - MatatuHub{% endblock %}
 
-    <h1>Fleet Vehicles</h1>
-
-    <p>
-        <a href="{{ url_for('fleet.new_vehicle') }}">
+{% block fleet_content %}
+<section class="fleet-card">
+    <div class="fleet-header">
+        <div>
+            <h2>Fleet Vehicles</h2>
+            <p>View and manage registered vehicles.</p>
+        </div>
+        <a class="fleet-button" href="{{ url_for('fleet.new_vehicle') }}">
             Add Vehicle
         </a>
-    </p>
+    </div>
 
-    <table border="1" cellpadding="8">
-
-        <thead>
-            <tr>
-                <th>Registration</th>
-                <th>Make</th>
-                <th>Year</th>
-                <th>Type</th>
-                <th>Ownership</th>
-                <th>Status</th>
-                <th>View</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-            {% for vehicle in vehicles %}
-
-            <tr>
-
-                <td>
-                    {{ vehicle.reg_no }}
-                </td>
-
-                <td>
-                    {{ vehicle.make or "-" }}
-                </td>
-
-                <td>
-                    {{ vehicle.year or "-" }}
-                </td>
-
-                <td>
-                    {{ vehicle.type or "-" }}
-                </td>
-
-                <td>
-                    {{ vehicle.ownership or "-" }}
-                </td>
-
-                <td>
-                    {{ vehicle.status }}
-                </td>
-
-                <td>
-                    <a href="{{ url_for(
-                        'fleet.view_vehicle',
-                        id=vehicle.id
-                    ) }}">
-                        View
-                    </a>
-                </td>
-
-            </tr>
-
-            {% else %}
-
-            <tr>
-                <td colspan="7">
-                    No vehicles have been registered.
-                </td>
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
-</body>
-
-</html>
-
+    {% if vehicles %}
+        <div class="fleet-table-wrapper">
+            <table class="fleet-table">
+                <thead>
+                    <tr>
+                        <th>Registration</th>
+                        <th>Make</th>
+                        <th>Year</th>
+                        <th>Type</th>
+                        <th>Ownership</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehicle in vehicles %}
+                    <tr>
+                        <td>{{ vehicle.reg_no }}</td>
+                        <td>{{ vehicle.make or "Not recorded" }}</td>
+                        <td>{{ vehicle.year or "Not recorded" }}</td>
+                        <td>{{ vehicle.type or "Not recorded" }}</td>
+                        <td>{{ vehicle.ownership or "Not recorded" }}</td>
+                        <td>{{ vehicle.status|replace("_", " ")|title }}</td>
+                        <td>
+                            <a href="{{ url_for('fleet.view_vehicle', id=vehicle.id) }}">
+                                View details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No vehicles have been registered yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,67 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
 
+{% extends "internal_base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>Route Details - MatatuHub</title>
-</head>
+{% block title %}Route Details | MatatuHub{% endblock %}
 
-<body>
+{% block content %}
+<div class="hr-page">
 
+    <div class="page-header">
+        <div>
+            <h1>Route Details</h1>
+            <p>View route information, fares and schedules.</p>
+        </div>
+    </div>
 
-    <p>TEST - NEW ROUTE PROFILE TEMPLATE</p>
-    <h1>Route Details</h1>
+    <div class="profile-section">
+        <h2>{{ route.name }}</h2>
 
-    <table border="1" cellpadding="8">
+        <div class="profile-details">
+            <p>
+                <strong>Route Name:</strong>
+                {{ route.name }}
+            </p>
 
-        <tr>
-            <th>Route Name</th>
-            <td>{{ route.name }}</td>
-        </tr>
+            <p>
+                <strong>Start Point:</strong>
+                {{ route.start_point }}
+            </p>
 
-        <tr>
-            <th>Start Point</th>
-            <td>{{ route.start_point }}</td>
-        </tr>
+            <p>
+                <strong>Destination:</strong>
+                {{ route.destination }}
+            </p>
 
-        <tr>
-            <th>Destination</th>
-            <td>{{ route.destination }}</td>
-        </tr>
+            <p>
+                <strong>Status:</strong>
+                {{ route.status }}
+            </p>
+        </div>
+    </div>
 
-        <tr>
-            <th>Status</th>
-            <td>{{ route.status }}</td>
-        </tr>
+    <div class="profile-section">
+        <h2>Route Management</h2>
 
-    </table>
+        <p>View or manage the fare information associated with this route.</p>
 
-
-    <p>
-        <a href="{{ url_for(
-            'operations.list_fares',
-            route_id=route.id
-        ) }}">
+        <a href="{{ url_for('operations.list_fares', route_id=route.id) }}"
+           class="btn btn-primary">
             View Fares
         </a>
-    </p>
 
-    <p>
-        <a href="{{ url_for(
-            'schedules.list_schedules',
-            route_id=route.id
-        ) }}">
+        <p>View the schedules associated with this route.</p>
+
+        <a href="{{ url_for('schedules.list_schedules', route_id=route.id) }}"
+           class="btn btn-primary">
             View Schedules
         </a>
-    </p>
+    </div>
 
     <p>
         <a href="{{ url_for('operations.list_routes') }}">
             Back to Routes
         </a>
     </p>
-    
-</body>
 
-</html>
+</div>
+{% endblock %}

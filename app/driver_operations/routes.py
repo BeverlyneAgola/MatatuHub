@@ -84,13 +84,23 @@ def list_drivers():
         for allocation in allocations
     }
 
+    vehicles = {
+        vehicle.id: vehicle
+        for vehicle in Vehicle.query.all()
+    }
+
+    routes = {
+        route.id: route
+        for route in Route.query.all()
+    }
+
     return render_template(
         "driver_operations/drivers.html",
         drivers=drivers,
         allocations_by_driver=allocations_by_driver,
+        vehicles=vehicles,
+        routes=routes,
     )
-
-
 # ============================================================
 # VIEW ALL DRIVER TRIP LOGS
 # ============================================================

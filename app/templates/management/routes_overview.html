@@ -1,147 +1,212 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Routes Overview - MatatuHub</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: #f4f6f9;
-            color: #222;
-        }
+{% extends "management/management_base.html" %}
 
-        header {
-            background: #183153;
-            color: white;
-            padding: 20px 30px;
-        }
+{% block title %}Routes Overview{% endblock %}
+{% block page_heading %}Routes Overview{% endblock %}
 
-        nav a {
-            color: white;
-            margin-right: 18px;
-            text-decoration: none;
-        }
+{% block content %}
 
-        main {
-            padding: 25px;
-        }
+<section class="mg-intro">
+    <h2>Route Performance</h2>
+    <p>
+        Review route status, active allocations,
+        and configured fares.
+    </p>
+</section>
 
-        section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-        }
+<div class="mg-grid">
 
-        .table-container {
-            overflow-x: auto;
-        }
+    <article class="mg-card">
+        <div class="label">Registered Routes</div>
+        <div class="value">{{ routes|length }}</div>
+    </article>
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 750px;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background: #e9eef5;
-        }
-
-        .back {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #183153;
-        }
-    </style>
-</head>
-
-<body>
-
-<header>
-    <h1>Routes Overview</h1>
-
-    <nav>
-        <a href="{{ url_for('management.dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('management.fleet_allocations') }}">Fleet & Allocations</a>
-        <a href="{{ url_for('management.routes_overview') }}">Routes</a>
-        <a href="{{ url_for('management.outstanding_issues') }}">Outstanding Issues</a>
-        <a href="{{ url_for('management.workforce_overview') }}">Workforce</a>
-    </nav>
-</header>
-
-<main>
-    <a class="back" href="{{ url_for('management.dashboard') }}">
-        &larr; Back to Management Dashboard
-    </a>
-
-    <section>
-        <h2>Registered Routes</h2>
-
-        {% if routes %}
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Route Name</th>
-                        <th>Starting Point</th>
-                        <th>Destination</th>
-                        <th>Status</th>
-                        <th>Active Allocations</th>
-                        <th>Fare Records</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for item in routes %}
-                    <tr>
-                        <td>{{ item.route.name }}</td>
-                        <td>{{ item.route.start_point }}</td>
-                        <td>{{ item.route.destination }}</td>
-                        <td>{{ item.route.status }}</td>
-                        <td>{{ item.active_allocations }}</td>
-                        <td>{{ item.fares|length }}</td>
-                    </tr>
-
-                    {% if item.fares %}
-                    <tr>
-                        <td colspan="6">
-                            <strong>Fare records:</strong>
-
-                            {% for fare in item.fares %}
-                                <div>
-                                    {{ fare.direction }} |
-                                    {{ fare.time_band }} |
-                                    KSh {{ "%.2f"|format(fare.amount) }} |
-                                    Effective from {{ fare.effective_from }}
-                                    {% if fare.effective_until %}
-                                        until {{ fare.effective_until }}
-                                    {% else %}
-                                        (no end date recorded)
-                                    {% endif %}
-                                </div>
-                            {% endfor %}
-                        </td>
-                    </tr>
-                    {% endif %}
-
-                    {% endfor %}
-                </tbody>
-            </table>
+    <article class="mg-card">
+        <div class="label">Active Routes</div>
+        <div class="value">
+            {{ routes|selectattr('route.status', 'equalto', 'active')|list|length }}
         </div>
-        {% else %}
-            <p>No routes have been registered.</p>
-        {% endif %}
-    </section>
-</main>
+    </article>
 
-</body>
-</html>
-```
+    <article class="mg-card">
+        <div class="label">Active Allocations</div>
+        <div class="value">
+            {{ routes|sum(attribute='active_allocations') }}
+        </div>
+    </article>
+
+</div>
+
+<section class="mg-panel">
+    <h3>Active Allocations by Route</h3>
+    <div class="mg-chart-box">
+        <canvas id="routeAllocationsChart"></canvas>
+    </div>
+</section>
+
+<div class="mg-section-title">
+    <h3>Registered Routes and Fares</h3>
+</div>
+
+<div class="mg-panel">
+    <div class="mg-table-wrap">
+        <table class="mg-table">
+            <thead>
+                <tr>
+                    <th>Route</th>
+                    <th>Start</th>
+                    <th>Destination</th>
+                    <th>Status</th>
+                    <th>Active Allocations</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in routes %}
+                <tr>
+                    <td>{{ item.route.name }}</td>
+                    <td>{{ item.route.start_point }}</td>
+                    <td>{{ item.route.destination }}</td>
+                    <td>
+                        <span class="mg-status">
+                            {{ item.route.status|replace('_', ' ')|title }}
+                        </span>
+                    </td>
+                    <td>{{ item.active_allocations }}</td>
+                </tr>
+
+                <tr>
+                    <td colspan="5">
+                        <strong>Fare Records</strong>
+
+                        {% if item.fares %}
+                        <div class="mg-table-wrap">
+                            <table class="mg-table">
+                                <thead>
+                                    <tr>
+                                        <th>Direction</th>
+                                        <th>Time Band</th>
+                                        <th>Amount</th>
+                                        <th>Effective From</th>
+                                        <th>Effective Until</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {% for fare in item.fares %}
+                                    <tr>
+                                        <td>{{ fare.direction }}</td>
+                                        <td>{{ fare.time_band }}</td>
+                                        <td>
+                                            {% if fare.amount is not none %}
+                                                {{ '%.2f'|format(fare.amount) }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if fare.effective_from %}
+                                                {{ fare.effective_from.strftime('%d %b %Y') }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if fare.effective_until %}
+                                                {{ fare.effective_until.strftime('%d %b %Y') }}
+                                            {% else %}
+                                                Current
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="mg-empty">
+                            No fare records for this route.
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% else %}
+                <tr>
+                    <td colspan="5">
+                        <div class="mg-empty">
+                            No routes have been registered.
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script id="route-chart-data" type="application/json">
+{
+    "labels": [
+        {% for item in routes %}
+            {{ item.route.name|tojson }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ],
+    "allocations": [
+        {% for item in routes %}
+            {{ item.active_allocations|tojson }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+
+<script>
+    const routeChartData = JSON.parse(
+        document.getElementById("route-chart-data").textContent
+    );
+
+    const routeChartCanvas = document.getElementById("routeAllocationsChart");
+
+    if (routeChartCanvas && typeof Chart !== "undefined") {
+        new Chart(routeChartCanvas, {
+            type: "bar",
+
+            data: {
+                labels: routeChartData.labels,
+
+                datasets: [{
+                    label: "Active allocations",
+                    data: routeChartData.allocations,
+                    borderWidth: 1
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+{% endblock %}

@@ -104,4 +104,3 @@ def workforce_overview():
         "management/workforce_overview.html",
         workforce=workforce
     )
-

@@ -1,156 +1,96 @@
-html
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>New Allocation - MatatuHub</title>
-</head>
+{% extends "fleet/fleet_base.html" %}
 
-<body>
+{% block title %}New Allocation - MatatuHub{% endblock %}
 
-    <h1>New Vehicle Allocation</h1>
-
-    <form method="POST">
-
-        <p>
-
-            <label for="driver_id">
-                Driver
-            </label>
-
-            <select
-                name="driver_id"
-                id="driver_id"
-                required
-            >
-
-                <option value="">
-                    Select Driver
-                </option>
-
-                {% for driver in drivers %}
-
-                <option value="{{ driver.id }}">
-                    {{ driver.first_name }}
-                    {{ driver.last_name }}
-                    — {{ driver.staff_id }}
-                </option>
-
-                {% endfor %}
-
-            </select>
-
-        </p>
-
-
-        <p>
-
-            <label for="conductor_id">
-                Conductor
-            </label>
-
-            <select
-                name="conductor_id"
-                id="conductor_id"
-                required
-            >
-
-                <option value="">
-                    Select Conductor
-                </option>
-
-                {% for conductor in conductors %}
-
-                <option value="{{ conductor.id }}">
-                    {{ conductor.first_name }}
-                    {{ conductor.last_name }}
-                    — {{ conductor.staff_id }}
-                </option>
-
-                {% endfor %}
-
-            </select>
-
-        </p>
-
-
-        <p>
-
-            <label for="vehicle_id">
-                Vehicle
-            </label>
-
-            <select
-                name="vehicle_id"
-                id="vehicle_id"
-                required
-            >
-
-                <option value="">
-                    Select Vehicle
-                </option>
-
-                {% for vehicle in vehicles %}
-
-                <option value="{{ vehicle.id }}">
-                    {{ vehicle.reg_no }}
-                    — {{ vehicle.make or "" }}
-                    — {{ vehicle.status }}
-                </option>
-
-                {% endfor %}
-
-            </select>
-
-        </p>
-
-
-        <p>
-
-            <label for="route_id">
-                Route
-            </label>
-
-            <select
-                name="route_id"
-                id="route_id"
-                required
-            >
-
-                <option value="">
-                    Select Route
-                </option>
-
-                {% for route in routes %}
-
-                <option value="{{ route.id }}">
-                    {{ route.name }}
-                </option>
-
-                {% endfor %}
-
-            </select>
-
-        </p>
-
-
-        <button type="submit">
-            Create Allocation
-        </button>
-
-    </form>
-
-
-    <p>
-        <a href="{{ url_for(
-            'fleet.list_vehicles'
-        ) }}">
-            Back to Vehicles
-        </a>
+{% block fleet_content %}
+<section class="fleet-card">
+    <h2>Create Vehicle Allocation</h2>
+    <p class="fleet-muted">
+        Select an active driver, conductor, vehicle and route.
     </p>
 
-</body>
+    <form method="POST" class="fleet-form">
+        <div>
+            <label for="driver_id">Driver *</label>
+            <select id="driver_id" name="driver_id" required>
+                <option value="">Select driver</option>
+                {% for driver in drivers %}
+                <option value="{{ driver.id }}"
+                    {% if request.form.get('driver_id') == driver.id|string %}selected{% endif %}>
+                    {{ driver.first_name }} {{ driver.last_name }}
+                    ({{ driver.staff_id }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
 
-</html>
+        <div>
+            <label for="conductor_id">Conductor *</label>
+            <select id="conductor_id" name="conductor_id" required>
+                <option value="">Select conductor</option>
+                {% for conductor in conductors %}
+                <option value="{{ conductor.id }}"
+                    {% if request.form.get('conductor_id') == conductor.id|string %}selected{% endif %}>
+                    {{ conductor.first_name }} {{ conductor.last_name }}
+                    ({{ conductor.staff_id }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
 
+        <div>
+            <label for="vehicle_id">Vehicle *</label>
+            <select id="vehicle_id" name="vehicle_id" required>
+                <option value="">Select vehicle</option>
+                {% for vehicle in vehicles %}
+                <option value="{{ vehicle.id }}"
+                    {% if request.form.get('vehicle_id') == vehicle.id|string %}selected{% endif %}>
+                    {{ vehicle.reg_no }} — {{ vehicle.make or "Make not recorded" }}
+                    ({{ vehicle.status|replace("_", " ")|title }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="route_id">Route *</label>
+            <select id="route_id" name="route_id" required>
+                <option value="">Select route</option>
+                {% for route in routes %}
+                <option value="{{ route.id }}"
+                    {% if request.form.get('route_id') == route.id|string %}selected{% endif %}>
+                    {{ route.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="fleet-actions">
+            <button type="submit" class="fleet-button">
+                Create Allocation
+            </button>
+            <a href="{{ url_for('fleet.list_vehicles') }}"
+               class="fleet-button fleet-button-secondary">
+                Cancel
+            </a>
+        </div>
+    </form>
+
+    {% if not drivers %}
+        <p>No active drivers are available.</p>
+    {% endif %}
+
+    {% if not conductors %}
+        <p>No active conductors are available.</p>
+    {% endif %}
+
+    {% if not vehicles %}
+        <p>No eligible vehicles are available for allocation.</p>
+    {% endif %}
+
+    {% if not routes %}
+        <p>No routes have been registered.</p>
+    {% endif %}
+</section>
+{% endblock %}

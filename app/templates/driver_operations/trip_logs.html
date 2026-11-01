@@ -1,21 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Driver Trip Logs - MatatuHub</title>
-</head>
-<body>
+{% extends "internal_base.html" %}
 
-    <h1>Driver Trip Logs</h1>
+{% block title %}Driver Trip Logs - MatatuHub{% endblock %}
 
-    <p>
-        <a href="{{ url_for('driver_operations.index') }}">
-            Back to Dashboard
-        </a>
-    </p>
+{% block content %}
 
-    {% if trip_logs %}
-        <table border="1" cellpadding="8">
+<div class="page-header">
+    <div>
+        <h1>Driver Trip Logs</h1>
+        <p>Review recorded driver trips and their assignment details.</p>
+    </div>
+
+    <a href="{{ url_for('driver_operations.index') }}"
+       class="btn btn-secondary">
+        Back to Dashboard
+    </a>
+</div>
+
+
+<div class="card">
+
+    <div class="card-header">
+        <h2>Trip Records</h2>
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table">
+
             <thead>
                 <tr>
                     <th>Trip ID</th>
@@ -30,11 +41,14 @@
             </thead>
 
             <tbody>
+
                 {% for trip in trip_logs %}
+
                     {% set driver = drivers.get(trip.driver_id) %}
                     {% set allocation = allocations.get(trip.allocation_id) %}
 
                     <tr>
+
                         <td>{{ trip.id }}</td>
 
                         <td>
@@ -46,45 +60,70 @@
                         </td>
 
                         <td>
+
                             {% if allocation %}
+
                                 {% set vehicle = vehicles.get(allocation.vehicle_id) %}
+
                                 {{ vehicle.reg_no if vehicle else 'Unknown' }}
+
                             {% else %}
                                 Unknown
                             {% endif %}
+
                         </td>
 
                         <td>
+
                             {% if allocation %}
+
                                 {% set route = routes.get(allocation.route_id) %}
+
                                 {{ route.name if route else 'Unknown' }}
+
                             {% else %}
                                 Unknown
                             {% endif %}
+
                         </td>
 
                         <td>
-                            {{ trip.start_time.strftime('%Y-%m-%d %H:%M') if trip.start_time else '—' }}
+                            {{ trip.start_time.strftime('%Y-%m-%d %H:%M')
+                               if trip.start_time else '—' }}
                         </td>
 
                         <td>
-                            {{ trip.end_time.strftime('%Y-%m-%d %H:%M') if trip.end_time else 'In Progress' }}
+                            {{ trip.end_time.strftime('%Y-%m-%d %H:%M')
+                               if trip.end_time else 'In Progress' }}
                         </td>
 
                         <td>{{ trip.notes or '—' }}</td>
 
                         <td>
-                            <a href="{{ url_for('driver_operations.view_trip_log', trip_log_id=trip.id) }}">
+                            <a href="{{ url_for('driver_operations.view_trip_log', trip_log_id=trip.id) }}"
+                               class="btn btn-primary btn-sm">
                                 View Details
                             </a>
                         </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No driver trip logs have been recorded yet.</p>
-    {% endif %}
 
-</body>
-</html>
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            No driver trip logs have been recorded yet.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,119 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>New Fare - MatatuHub</title>
-</head>
+{% extends "internal_base.html" %}
 
-<body>
+{% block title %}New Fare | MatatuHub{% endblock %}
 
-    <h1>New Fare</h1>
+{% block content %}
+<div class="hr-page">
 
-    <h2>{{ route.name }}</h2>
+    <div class="page-header">
+        <div>
+            <h1>Add New Fare</h1>
+            <p>Route: {{ route.name }}</p>
+        </div>
+    </div>
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div>
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
+    <div class="profile-section">
+        <form method="POST" class="employee-form">
+
+            <div class="form-group">
+                <label for="direction">Direction</label>
+                <input
+                    type="text"
+                    id="direction"
+                    name="direction"
+                    placeholder="e.g. Towards CBD"
+                    required
+                >
             </div>
-        {% endif %}
-    {% endwith %}
 
-    <form method="POST">
+            <div class="form-group">
+                <label for="time_band">Time Band</label>
+                <select id="time_band" name="time_band" required>
+                    <option value="">Select time band</option>
+                    <option value="peak">Peak</option>
+                    <option value="off_peak">Off-Peak</option>
+                </select>
+            </div>
 
-        <div>
-            <label for="direction">
-                Direction
-            </label><br>
+            <div class="form-group">
+                <label for="amount">Fare Amount</label>
+                <input
+                    type="number"
+                    id="amount"
+                    name="amount"
+                    min="0.01"
+                    step="0.01"
+                    required
+                >
+            </div>
 
-            <input
-                type="text"
-                id="direction"
-                name="direction"
-                placeholder="e.g. Towards CBD"
-                required
-            >
-        </div>
+            <div class="form-group">
+                <label for="effective_from">Effective From</label>
+                <input
+                    type="date"
+                    id="effective_from"
+                    name="effective_from"
+                    required
+                >
+            </div>
 
-        <br>
+            <button type="submit" class="btn btn-primary">
+                Create Fare
+            </button>
 
-        <div>
-            <label for="time_band">
-                Time Band
-            </label><br>
+            <a href="{{ url_for('operations.list_fares', route_id=route.id) }}"
+               class="btn">
+                Cancel
+            </a>
 
-            <select
-                id="time_band"
-                name="time_band"
-                required
-            >
-                <option value="">
-                    Select time band
-                </option>
+        </form>
+    </div>
 
-                <option value="peak">
-                    Peak
-                </option>
-
-                <option value="off_peak">
-                    Off-Peak
-                </option>
-
-            </select>
-        </div>
-
-        <br>
-
-        <div>
-            <label for="amount">
-                Fare Amount
-            </label><br>
-
-            <input
-                type="number"
-                id="amount"
-                name="amount"
-                min="0.01"
-                step="0.01"
-                required
-            >
-        </div>
-
-        <br>
-
-        <div>
-            <label for="effective_from">
-                Effective From
-            </label><br>
-
-            <input
-                type="date"
-                id="effective_from"
-                name="effective_from"
-                required
-            >
-        </div>
-
-        <br>
-
-        <button type="submit">
-            Create Fare
-        </button>
-
-    </form>
-
-    <p>
-        <a href="{{ url_for(
-            'operations.list_fares',
-            route_id=route.id
-        ) }}">
-            Back to Fares
-        </a>
-    </p>
-
-</body>
-
-</html>
+</div>
+{% endblock %}

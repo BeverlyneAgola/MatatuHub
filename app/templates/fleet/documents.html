@@ -1,164 +1,97 @@
-html
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Vehicle Documents - MatatuHub</title>
-</head>
+{% extends "fleet/fleet_base.html" %}
 
-<body>
+{% block title %}Vehicle Documents - MatatuHub{% endblock %}
 
-    <h1>
-        Documents — {{ vehicle.reg_no }}
-    </h1>
+{% block fleet_content %}
+<section class="fleet-card">
+    <h2>Vehicle Documents: {{ vehicle.reg_no }}</h2>
+    <p class="fleet-muted">
+        Record insurance, logbook and inspection details.
+    </p>
 
-    <h2>Add Document</h2>
-
-    <form method="POST">
-
-        <p>
-
-            <label for="doc_type">
-                Document Type
-            </label>
-
-            <select
-                name="doc_type"
-                id="doc_type"
-                required
-            >
-
-                <option value="">
-                    Select Document
-                </option>
-
-                <option value="insurance">
-                    Insurance
-                </option>
-
-                <option value="logbook">
-                    Logbook
-                </option>
-
-                <option value="inspection">
-                    Inspection
-                </option>
-
+    <form method="POST" class="fleet-form">
+        <div>
+            <label for="doc_type">Document Type *</label>
+            <select id="doc_type" name="doc_type" required>
+                <option value="">Select document type</option>
+                <option value="insurance">Insurance</option>
+                <option value="logbook">Logbook</option>
+                <option value="inspection">Inspection</option>
             </select>
+        </div>
 
-        </p>
+        <div>
+            <label for="document_number">Document Number</label>
+            <input type="text"
+                   id="document_number"
+                   name="document_number"
+                   maxlength="100">
+        </div>
 
-        <p>
+        <div>
+            <label for="issue_date">Issue Date</label>
+            <input type="date" id="issue_date" name="issue_date">
+        </div>
 
-            <label for="document_number">
-                Document Number
-            </label>
+        <div>
+            <label for="expiry_date">Expiry Date</label>
+            <input type="date" id="expiry_date" name="expiry_date">
+        </div>
 
-            <input
-                type="text"
-                name="document_number"
-                id="document_number"
-            >
-
-        </p>
-
-        <p>
-
-            <label for="issue_date">
-                Issue Date
-            </label>
-
-            <input
-                type="date"
-                name="issue_date"
-                id="issue_date"
-            >
-
-        </p>
-
-        <p>
-
-            <label for="expiry_date">
-                Expiry Date
-            </label>
-
-            <input
-                type="date"
-                name="expiry_date"
-                id="expiry_date"
-            >
-
-        </p>
-
-        <button type="submit">
-            Add Document
+        <button type="submit" class="fleet-button">
+            Save Document
         </button>
-
     </form>
+</section>
 
+<section class="fleet-card">
+    <h2>Recorded Documents</h2>
 
-    <h2>Existing Documents</h2>
-
-    {% for document in documents %}
-
-    <div>
-
-        <p>
-            <strong>
-                {{ document.doc_type }}
-            </strong>
-        </p>
-
-        <p>
-            Number:
-            {{ document.document_number or "-" }}
-        </p>
-
-        <p>
-            Issue Date:
-            {{ document.issue_date or "-" }}
-        </p>
-
-        <p>
-            Expiry Date:
-            {{ document.expiry_date or "-" }}
-        </p>
-
-        {% if document.expiry_date
-              and document.expiry_date < today %}
-
-            <strong>
-                EXPIRED — allocation is NOT blocked.
-            </strong>
-
-        {% endif %}
-
-        <hr>
-
-    </div>
-
+    {% if documents %}
+        <div class="fleet-table-wrapper">
+            <table class="fleet-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Document Number</th>
+                        <th>Issue Date</th>
+                        <th>Expiry Date</th>
+                        <th>Expiry Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for document in documents %}
+                    <tr>
+                        <td>{{ document.doc_type|title }}</td>
+                        <td>{{ document.document_number or "Not recorded" }}</td>
+                        <td>{{ document.issue_date or "Not recorded" }}</td>
+                        <td>{{ document.expiry_date or "Not recorded" }}</td>
+                        <td>
+                            {% if document.expiry_date and document.expiry_date < today %}
+                                Expired
+                            {% elif document.expiry_date and document.expiry_date == today %}
+                                Expires today
+                            {% elif document.expiry_date %}
+                                Valid
+                            {% else %}
+                                No expiry date
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
+        <p>No documents have been recorded yet.</p>
+    {% endif %}
 
-    <p>
-        No documents recorded.
-    </p>
-
-    {% endfor %}
-
-
-    <p>
-
-        <a href="{{ url_for(
-            'fleet.view_vehicle',
-            id=vehicle.id
-        ) }}">
-            Back to Vehicle
+    <div class="fleet-actions">
+        <a class="fleet-button fleet-button-secondary"
+           href="{{ url_for('fleet.view_vehicle', id=vehicle.id) }}">
+            Back to Vehicle Profile
         </a>
-
-    </p>
-
-</body>
-
-</html>
-
+    </div>
+</section>
+{% endblock %}
