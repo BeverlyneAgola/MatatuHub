@@ -1,7 +1,26 @@
+from datetime import timezone
+from zoneinfo import ZoneInfo
+
 from flask import Flask
 
 from app.config import Config
 from app.extensions import db, migrate, login_manager
+
+
+def format_kenya_time(value):
+    """
+    Convert a database UTC timestamp to East Africa Time.
+
+    Naive timestamps are treated as UTC because the application
+    currently stores timestamps using datetime.utcnow().
+    """
+    if value is None:
+        return None
+
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+
+    return value.astimezone(ZoneInfo("Africa/Nairobi"))
 
 
 def create_app():
@@ -13,6 +32,9 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+
+    # Register Kenya time conversion for Jinja templates.
+    app.jinja_env.filters["kenya_time"] = format_kenya_time
 
     from app import models
 
@@ -31,7 +53,7 @@ def create_app():
     from app.management import management_bp
     from app.public import public_bp
     from app.management import routes as management_routes
-
+    from app.payments.daraja_routes import payments_bp
 
     app.register_blueprint(fleet_bp)
     app.register_blueprint(auth_bp)
@@ -46,5 +68,6 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(management_bp)
     app.register_blueprint(public_bp)
-    
+    app.register_blueprint(payments_bp)
+
     return app

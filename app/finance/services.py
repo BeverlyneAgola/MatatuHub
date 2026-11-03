@@ -498,26 +498,32 @@ def get_collections_report():
         PaymentLog.id.desc()
     ).all()
 
+    confirmed_payments = [
+        payment
+        for payment in payment_logs
+        if (payment.payment_status or "").strip().lower() == "confirmed"
+    ]
+
     total_fares = sum(
         (
-            Decimal(str(log.fare_amount or 0))
-            for log in payment_logs
+            Decimal(str(payment.fare_amount or 0))
+            for payment in confirmed_payments
         ),
         Decimal("0.00"),
     )
 
     total_amount_given = sum(
         (
-            Decimal(str(log.amount_given or 0))
-            for log in payment_logs
+            Decimal(str(payment.amount_given or 0))
+            for payment in confirmed_payments
         ),
         Decimal("0.00"),
     )
 
     total_change_given = sum(
         (
-            Decimal(str(log.change_given or 0))
-            for log in payment_logs
+            Decimal(str(payment.change_given or 0))
+            for payment in confirmed_payments
         ),
         Decimal("0.00"),
     )

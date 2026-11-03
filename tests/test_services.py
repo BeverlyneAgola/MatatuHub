@@ -638,17 +638,60 @@ class ServiceTests(unittest.TestCase):
                 amount_given=Decimal("60.00"),
                 change_given=Decimal("10.00"),
                 commuter_phone="0712345678",
+                payment_method="mpesa",
                 payment_status="pending",
             )
+        )
+        db.session.add_all(
+            [
+                PaymentLog(
+                    conductor_id=conductor.id,
+                    allocation_id=trip_allocation.id,
+                    route_id=route.id,
+                    vehicle_id=vehicle.id,
+                    direction="Towards CBD",
+                    time_band="peak",
+                    fare_amount=Decimal("30.00"),
+                    payment_method="mpesa",
+                    payment_status="failed",
+                ),
+                PaymentLog(
+                    conductor_id=conductor.id,
+                    allocation_id=trip_allocation.id,
+                    route_id=route.id,
+                    vehicle_id=vehicle.id,
+                    direction="Towards CBD",
+                    time_band="peak",
+                    fare_amount=Decimal("40.00"),
+                    amount_given=Decimal("50.00"),
+                    change_given=Decimal("10.00"),
+                    payment_method="cash",
+                    payment_status="confirmed",
+                ),
+                PaymentLog(
+                    conductor_id=conductor.id,
+                    allocation_id=trip_allocation.id,
+                    route_id=route.id,
+                    vehicle_id=vehicle.id,
+                    direction="Towards CBD",
+                    time_band="peak",
+                    fare_amount=Decimal("20.00"),
+                    payment_method="mpesa",
+                    payment_status="confirmed",
+                ),
+            ]
         )
         db.session.commit()
 
         report = get_collections_report()
-        self.assertEqual(report["total_records"], 1)
-        self.assertEqual(report["total_fares"], Decimal("50.00"))
-        self.assertEqual(report["total_amount_given"], Decimal("60.00"))
+        self.assertEqual(report["total_records"], 4)
+        self.assertEqual(report["total_fares"], Decimal("60.00"))
+        self.assertEqual(report["total_amount_given"], Decimal("50.00"))
         self.assertEqual(report["total_change_given"], Decimal("10.00"))
-        self.assertEqual(report["status_totals"], {"pending": 1})
+        self.assertEqual(
+            report["status_totals"],
+            {"confirmed": 2, "failed": 1, "pending": 1},
+        )
 
     def test_fare_update_preserves_history(self):
         route = self.make_route()

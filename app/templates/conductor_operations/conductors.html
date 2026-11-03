@@ -1,76 +1,184 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conductors - MatatuHub</title>
+
+
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        padding: 30px;
+        font-family: Arial, sans-serif;
+        background: #f4f6f9;
+        color: #333;
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: auto;
+    }
+
+    .card {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    h1 { color: #243b53; }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #2874a6;
+        text-decoration: none;
+    }
+
+    .table-wrapper { overflow-x: auto; }
+
+    table {
+        width: 100%;
+        min-width: 750px;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 13px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+    }
+
+    th {
+        background: #f1f5f9;
+        color: #334155;
+    }
+
+    tr:hover { background: #f8fafc; }
+
+    .assigned {
+        color: #047857;
+        font-weight: bold;
+    }
+
+    .unassigned {
+        color: #b45309;
+        font-weight: bold;
+    }
+
+    .button {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 11px 16px;
+        background: #2874a6;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+    @media (max-width: 600px) {
+        body { padding: 15px; }
+    }
+</style>
+
+
 </head>
+
 <body>
+
+<div class="container">
+
+
+<div class="card">
 
     <h1>Active Conductors</h1>
 
-    <p>
-        <a href="{{ url_for('conductor_operations.index') }}">
-            Back to Conductor Operations Dashboard
-        </a>
-    </p>
+    <a class="back-link"
+       href="{{ url_for('conductor_operations.index') }}">
+        &larr; Back to Conductor Operations Dashboard
+    </a>
 
     {% if conductors %}
-        <table border="1" cellpadding="8">
-            <thead>
-                <tr>
-                    <th>Staff ID</th>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Assignment Status</th>
-                    <th>Vehicle</th>
-                    <th>Route</th>
-                </tr>
-            </thead>
 
-            <tbody>
-                {% for conductor in conductors %}
-                    {% set allocation = allocations_by_conductor.get(conductor.id) %}
+        <div class="table-wrapper">
 
+            <table>
+                <thead>
                     <tr>
-                        <td>{{ conductor.staff_id }}</td>
-
-                        <td>
-                            {{ conductor.first_name }}
-                            {{ conductor.last_name }}
-                        </td>
-
-                        <td>{{ conductor.phone or 'Not provided' }}</td>
-
-                        {% if allocation %}
-                            <td>Assigned</td>
-
-                            <td>
-                                {% set vehicle = vehicles.get(allocation.vehicle_id) %}
-                                {{ vehicle.reg_no if vehicle else 'Unavailable' }}
-                            </td>
-
-                            <td>
-                                {% set route = routes.get(allocation.route_id) %}
-                                {{ route.name if route else 'Unavailable' }}
-                            </td>
-                        {% else %}
-                            <td>Not Assigned</td>
-                            <td>—</td>
-                            <td>—</td>
-                        {% endif %}
+                        <th>Staff ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Assignment Status</th>
+                        <th>Vehicle</th>
+                        <th>Route</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                    {% for conductor in conductors %}
+
+                        {% set allocation = allocations_by_conductor.get(conductor.id) %}
+
+                        <tr>
+                            <td>{{ conductor.staff_id }}</td>
+
+                            <td>
+                                {{ conductor.first_name }}
+                                {{ conductor.last_name }}
+                            </td>
+
+                            <td>
+                                {{ conductor.phone or 'Not provided' }}
+                            </td>
+
+                            {% if allocation %}
+
+                                <td class="assigned">Assigned</td>
+
+                                <td>
+                                    {% set vehicle = vehicles.get(allocation.vehicle_id) %}
+                                    {{ vehicle.reg_no if vehicle else 'Unavailable' }}
+                                </td>
+
+                                <td>
+                                    {% set route = routes.get(allocation.route_id) %}
+                                    {{ route.name if route else 'Unavailable' }}
+                                </td>
+
+                            {% else %}
+
+                                <td class="unassigned">Not Assigned</td>
+                                <td>—</td>
+                                <td>—</td>
+
+                            {% endif %}
+                        </tr>
+
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+
     {% else %}
+
         <p>No active conductors were found.</p>
+
     {% endif %}
 
-    <p>
-        <a href="{{ url_for('conductor_operations.list_payment_logs') }}">
-            View Payment Logs
-        </a>
-    </p>
+    <a class="button"
+       href="{{ url_for('conductor_operations.list_payment_logs') }}">
+        View Payment Logs
+    </a>
+
+</div>
+
+
+</div>
 
 </body>
 </html>

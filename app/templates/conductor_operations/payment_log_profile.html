@@ -1,97 +1,304 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Details - MatatuHub</title>
+
+```
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        padding: 30px;
+        font-family: Arial, sans-serif;
+        background: #f4f6f9;
+        color: #333;
+    }
+
+    .container {
+        max-width: 850px;
+        margin: auto;
+    }
+
+    .card {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    h1, h2 { color: #243b53; }
+
+    h2 {
+        font-size: 19px;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 10px;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #2874a6;
+        text-decoration: none;
+    }
+
+    .detail {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 11px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .detail strong { color: #475569; }
+
+    .detail span {
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .confirmed {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .failed {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .method {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    @media (max-width: 550px) {
+        body { padding: 15px; }
+
+        .detail {
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .detail span { text-align: left; }
+    }
+</style>
+```
+
 </head>
+
 <body>
 
-    <h1>Payment Record #{{ payment_log.id }}</h1>
+<div class="container">
 
-    <p>
-        <a href="{{ url_for('conductor_operations.list_payment_logs') }}">
-            Back to Payment Logs
-        </a>
-    </p>
+```
+<h1>Payment Record #{{ payment_log.id }}</h1>
 
+<a class="back-link"
+   href="{{ url_for('conductor_operations.list_payment_logs') }}">
+    &larr; Back to Payment Logs
+</a>
+
+<div class="card">
     <h2>Conductor Information</h2>
 
     {% if conductor %}
-        <p>
-            <strong>Staff ID:</strong>
-            {{ conductor.staff_id }}
-        </p>
 
-        <p>
-            <strong>Name:</strong>
-            {{ conductor.first_name }} {{ conductor.last_name }}
-        </p>
+        <div class="detail">
+            <strong>Staff ID</strong>
+            <span>{{ conductor.staff_id }}</span>
+        </div>
+
+        <div class="detail">
+            <strong>Name</strong>
+            <span>
+                {{ conductor.first_name }} {{ conductor.last_name }}
+            </span>
+        </div>
+
     {% else %}
-        <p>Conductor information is unavailable.</p>
-    {% endif %}
 
+        <p>Conductor information is unavailable.</p>
+
+    {% endif %}
+</div>
+
+<div class="card">
     <h2>Assignment Information</h2>
 
     {% if allocation %}
-        <p>
-            <strong>Allocation ID:</strong>
-            {{ allocation.id }}
-        </p>
+
+        <div class="detail">
+            <strong>Allocation ID</strong>
+            <span>{{ allocation.id }}</span>
+        </div>
+
     {% else %}
+
         <p>Allocation information is unavailable.</p>
+
     {% endif %}
 
-    <p>
-        <strong>Vehicle:</strong>
-        {{ vehicle.reg_no if vehicle else 'Unavailable' }}
-    </p>
+    <div class="detail">
+        <strong>Vehicle</strong>
+        <span>{{ vehicle.reg_no if vehicle else 'Unavailable' }}</span>
+    </div>
 
-    <p>
-        <strong>Route:</strong>
-        {{ route.name if route else 'Unavailable' }}
-    </p>
+    <div class="detail">
+        <strong>Route</strong>
+        <span>{{ route.name if route else 'Unavailable' }}</span>
+    </div>
+</div>
 
+<div class="card">
     <h2>Payment Information</h2>
 
-    <p>
-        <strong>Direction:</strong>
-        {{ payment_log.direction }}
-    </p>
+    <div class="detail">
+        <strong>Payment ID</strong>
+        <span>{{ payment_log.id }}</span>
+    </div>
 
-    <p>
-        <strong>Time Band:</strong>
-        {{ payment_log.time_band }}
-    </p>
+    <div class="detail">
+        <strong>Direction</strong>
+        <span>{{ payment_log.direction }}</span>
+    </div>
 
-    <p>
-        <strong>Fare Amount:</strong>
-        {{ payment_log.fare_amount }}
-    </p>
+    <div class="detail">
+        <strong>Time Band</strong>
+        <span>{{ payment_log.time_band|replace('_', ' ')|title }}</span>
+    </div>
 
-    <p>
-        <strong>Amount Given:</strong>
-        {{ payment_log.amount_given }}
-    </p>
+    <div class="detail">
+        <strong>Payment Method</strong>
+        <span>
+            <span class="badge method">
+                {{ payment_log.payment_method|upper }}
+            </span>
+        </span>
+    </div>
 
-    <p>
-        <strong>Change Given:</strong>
-        {{ payment_log.change_given }}
-    </p>
+    <div class="detail">
+        <strong>Fare Amount</strong>
+        <span>KSh {{ "%.2f"|format(payment_log.fare_amount) }}</span>
+    </div>
 
-    <p>
-        <strong>Payment Status:</strong>
-        {{ payment_log.payment_status }}
-    </p>
+    <div class="detail">
+        <strong>Amount Given</strong>
+        <span>
+            {% if payment_log.amount_given is not none %}
+                KSh {{ "%.2f"|format(payment_log.amount_given) }}
+            {% else %}
+                —
+            {% endif %}
+        </span>
+    </div>
 
-    <p>
-        <strong>Transaction Reference:</strong>
-        {{ payment_log.transaction_ref or 'Not available' }}
-    </p>
+    <div class="detail">
+        <strong>Change Given</strong>
+        <span>
+            {% if payment_log.change_given is not none %}
+                KSh {{ "%.2f"|format(payment_log.change_given) }}
+            {% else %}
+                —
+            {% endif %}
+        </span>
+    </div>
 
-    <p>
-        <strong>Recorded At:</strong>
-        {{ payment_log.created_at.strftime('%Y-%m-%d %H:%M') if payment_log.created_at else '—' }}
-    </p>
+    <div class="detail">
+        <strong>Payment Status</strong>
+        <span>
+            <span class="badge {{ payment_log.payment_status }}">
+                {{ payment_log.payment_status|title }}
+            </span>
+        </span>
+    </div>
+
+    <div class="detail">
+        <strong>Transaction Reference</strong>
+        <span>{{ payment_log.transaction_ref or 'Not available' }}</span>
+    </div>
+
+    <div class="detail">
+        <strong>Commuter Phone</strong>
+        <span>{{ payment_log.commuter_phone or 'Not available' }}</span>
+    </div>
+</div>
+
+{% if payment_log.payment_method == 'mpesa' %}
+
+    <div class="card">
+        <h2>M-Pesa Transaction Information</h2>
+
+        <div class="detail">
+            <strong>Checkout Request ID</strong>
+            <span>{{ payment_log.checkout_request_id or 'Not available' }}</span>
+        </div>
+
+        <div class="detail">
+            <strong>Merchant Request ID</strong>
+            <span>{{ payment_log.merchant_request_id or 'Not available' }}</span>
+        </div>
+
+        <div class="detail">
+            <strong>STK Request Sent At</strong>
+            <span>
+                {{ payment_log.stk_sent_at.strftime('%Y-%m-%d %H:%M:%S')
+                   if payment_log.stk_sent_at else 'Not available' }}
+            </span>
+        </div>
+
+        <div class="detail">
+            <strong>Daraja Result Code</strong>
+            <span>{{ payment_log.result_code or 'Not available' }}</span>
+        </div>
+
+        <div class="detail">
+            <strong>Daraja Result Description</strong>
+            <span>{{ payment_log.result_description or 'Not available' }}</span>
+        </div>
+    </div>
+
+{% endif %}
+
+<div class="card">
+    <h2>Record Timestamps</h2>
+
+    <div class="detail">
+        <strong>Recorded At</strong>
+        <span>
+            {{ payment_log.created_at.strftime('%Y-%m-%d %H:%M:%S')
+               if payment_log.created_at else '—' }}
+        </span>
+    </div>
+
+    <div class="detail">
+        <strong>Paid At</strong>
+        <span>
+            {{ payment_log.paid_at.strftime('%Y-%m-%d %H:%M:%S')
+               if payment_log.paid_at else 'Not confirmed' }}
+        </span>
+    </div>
+</div>
+```
+
+</div>
 
 </body>
 </html>

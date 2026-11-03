@@ -2,60 +2,158 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conductor Operations Dashboard - MatatuHub</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        h1, h2 { color: #243b53; }
+
+        .welcome {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .metric {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2874a6;
+        }
+
+        .navigation {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .navigation a {
+            display: inline-block;
+            padding: 12px 18px;
+            background: #2874a6;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .navigation a:hover {
+            background: #1f5d87;
+        }
+
+        .logout {
+            background: #64748b !important;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            .card { overflow-x: auto; }
+        }
+    </style>
 </head>
+
 <body>
 
-    <h1>Conductor Operations Supervisor Dashboard</h1>
+<div class="container">
 
-    <p>Welcome to Conductor Operations monitoring.</p>
+    <h1>Conductor Operations Dashboard</h1>
 
-    <h2>Overview</h2>
+    <p class="welcome">
+        Welcome to Conductor Operations monitoring.
+    </p>
 
-    <table border="1" cellpadding="8">
-        <thead>
-            <tr>
-                <th>Metric</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Active Conductors</td>
-                <td>{{ conductors|length }}</td>
-            </tr>
-            <tr>
-                <td>Active Conductor Allocations</td>
-                <td>{{ active_allocations }}</td>
-            </tr>
-            <tr>
-                <td>Total Payment Logs</td>
-                <td>{{ total_payment_logs }}</td>
-            </tr>
-            <tr>
-                <td>Pending Payment Records</td>
-                <td>{{ pending_payments }}</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="card">
+        <h2>Operations Overview</h2>
 
-    <h2>Navigation</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
 
-    <ul>
-        <li>
+            <tbody>
+                <tr>
+                    <td>Active Conductors</td>
+                    <td class="metric">{{ conductors|length }}</td>
+                </tr>
+
+                <tr>
+                    <td>Active Conductor Allocations</td>
+                    <td class="metric">{{ active_allocations }}</td>
+                </tr>
+
+                <tr>
+                    <td>Total Payment Logs</td>
+                    <td class="metric">{{ total_payment_logs }}</td>
+                </tr>
+
+                <tr>
+                    <td>Pending Payment Records</td>
+                    <td class="metric">{{ pending_payments }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Navigation</h2>
+
+        <div class="navigation">
+
             <a href="{{ url_for('conductor_operations.list_conductors') }}">
                 View Conductors
             </a>
-        </li>
-        <li>
+
             <a href="{{ url_for('conductor_operations.list_payment_logs') }}">
                 View Payment Logs
             </a>
-        </li>
-        <li>
-            <a href="{{ url_for('auth.logout') }}">Logout</a>
-        </li>
-    </ul>
+
+            <a href="{{ url_for('auth.logout') }}" class="logout">
+                Logout
+            </a>
+
+        </div>
+    </div>
+
+</div>
 
 </body>
 </html>

@@ -1,151 +1,271 @@
-[{
-	"resource": "/c:/Users/agola/OneDrive/Desktop/GITHUB PROJECTS/My cv projects/Matatu MIS V2/MatatuHub/app/conductor/routes.py",
-	"owner": "Pylance",
-	"severity": 8,
-	"message": "\"(\" was not closed",
-	"source": "Pylance",
-	"startLineNumber": 27,
-	"startColumn": 25,
-	"endLineNumber": 27,
-	"endColumn": 26,
-	"modelVersionId": 37,
-	"origin": "extHost1"
-},{
-	"resource": "/c:/Users/agola/OneDrive/Desktop/GITHUB PROJECTS/My cv projects/Matatu MIS V2/MatatuHub/app/conductor/routes.py",
-	"owner": "Pylance",
-	"severity": 8,
-	"message": "\"return\" can be used only within a function",
-	"source": "Pylance",
-	"startLineNumber": 190,
-	"startColumn": 1,
-	"endLineNumber": 190,
-	"endColumn": 7,
-	"modelVersionId": 37,
-	"origin": "extHost1"
-},{
-	"resource": "/c:/Users/agola/OneDrive/Desktop/GITHUB PROJECTS/My cv projects/Matatu MIS V2/MatatuHub/app/conductor/routes.py",
-	"owner": "Pylance",
-	"code": {
-		"value": "reportUndefinedVariable",
-		"target": {
-			"$mid": 1,
-			"path": "/microsoft/pylance-release/blob/main/docs/diagnostics/reportUndefinedVariable.md",
-			"scheme": "https",
-			"authority": "github.com"
-		}
-	},
-	"severity": 4,
-	"message": "\"name\" is not defined",
-	"source": "Pylance",
-	"startLineNumber": 29,
-	"startColumn": 3,
-	"endLineNumber": 29,
-	"endColumn": 7,
-	"modelVersionId": 37,
-	"origin": "extHost1"
-},{
-	"resource": "/c:/Users/agola/OneDrive/Desktop/GITHUB PROJECTS/My cv projects/Matatu MIS V2/MatatuHub/app/conductor/routes.py",
-	"owner": "Pylance",
-	"code": {
-		"value": "reportUndefinedVariable",
-		"target": {
-			"$mid": 1,
-			"path": "/microsoft/pylance-release/blob/main/docs/diagnostics/reportUndefinedVariable.md",
-			"scheme": "https",
-			"authority": "github.com"
-		}
-	},
-	"severity": 4,
-	"message": "\"allocation\" is not defined",
-	"source": "Pylance",
-	"startLineNumber": 192,
-	"startColumn": 16,
-	"endLineNumber": 192,
-	"endColumn": 26,
-	"modelVersionId": 37,
-	"origin": "extHost1"
-},{
-	"resource": "/c:/Users/agola/OneDrive/Desktop/GITHUB PROJECTS/My cv projects/Matatu MIS V2/MatatuHub/app/conductor/routes.py",
-	"owner": "Pylance",
-	"code": {
-		"value": "reportUndefinedVariable",
-		"target": {
-			"$mid": 1,
-			"path": "/microsoft/pylance-release/blob/main/docs/diagnostics/reportUndefinedVariable.md",
-			"scheme": "https",
-			"authority": "github.com"
-		}
-	},
-	"severity": 4,
-	"message": "\"vehicle\" is not defined",
-	"source": "Pylance",
-	"startLineNumber": 193,
-	"startColumn": 13,
-	"endLineNumber": 193,
-	"endColumn": 20,
-	"modelVersionId": 37,
-	"origin": "extHost1"
-},{
-	"resource": "/c:/Users/agola/OneDrive/Desktop/GITHUB PROJECTS/My cv projects/Matatu MIS V2/MatatuHub/app/conductor/routes.py",
-	"owner": "Pylance",
-	"code": {
-		"value": "reportUndefinedVariable",
-		"target": {
-			"$mid": 1,
-			"path": "/microsoft/pylance-release/blob/main/docs/diagnostics/reportUndefinedVariable.md",
-			"scheme": "https",
-			"authority": "github.com"
-		}
-	},
-	"severity": 4,
-	"message": "\"route\" is not defined",
-	"source": "Pylance",
-	"startLineNumber": 194,
-	"startColumn": 11,
-	"endLineNumber": 194,
-	"endColumn": 16,
-	"modelVersionId": 37,
-	"origin": "extHost1"
-},{
-	"resource": "/c:/Users/agola/OneDrive/Desktop/GITHUB PROJECTS/My cv projects/Matatu MIS V2/MatatuHub/app/conductor/routes.py",
-	"owner": "Pylance",
-	"code": {
-		"value": "reportUndefinedVariable",
-		"target": {
-			"$mid": 1,
-			"path": "/microsoft/pylance-release/blob/main/docs/diagnostics/reportUndefinedVariable.md",
-			"scheme": "https",
-			"authority": "github.com"
-		}
-	},
-	"severity": 4,
-	"message": "\"directions\" is not defined",
-	"source": "Pylance",
-	"startLineNumber": 195,
-	"startColumn": 16,
-	"endLineNumber": 195,
-	"endColumn": 26,
-	"modelVersionId": 37,
-	"origin": "extHost1"
-},{
-	"resource": "/c:/Users/agola/OneDrive/Desktop/GITHUB PROJECTS/My cv projects/Matatu MIS V2/MatatuHub/app/conductor/routes.py",
-	"owner": "Pylance",
-	"code": {
-		"value": "reportUndefinedVariable",
-		"target": {
-			"$mid": 1,
-			"path": "/microsoft/pylance-release/blob/main/docs/diagnostics/reportUndefinedVariable.md",
-			"scheme": "https",
-			"authority": "github.com"
-		}
-	},
-	"severity": 4,
-	"message": "\"time_band\" is not defined",
-	"source": "Pylance",
-	"startLineNumber": 196,
-	"startColumn": 15,
-	"endLineNumber": 196,
-	"endColumn": 24,
-	"modelVersionId": 37,
-	"origin": "extHost1"
-}]
+{% extends "internal_base.html" %}
+
+{% block title %}My Assignment | MatatuHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .assignment-container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .assignment-card {
+        background: white;
+        padding: 25px;
+        border-radius: 9px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        margin-bottom: 25px;
+    }
+
+    .assignment-card h2 {
+        margin-top: 0;
+        color: #243b53;
+    }
+
+    .assignment-details {
+        line-height: 1.8;
+    }
+
+    .assignment-details p {
+        margin: 5px 0;
+    }
+
+    .assignment-button {
+        display: inline-block;
+        background: #2874a6;
+        color: white;
+        padding: 11px 17px;
+        border-radius: 5px;
+        text-decoration: none;
+        margin-top: 15px;
+    }
+
+    .assignment-button:hover {
+        background: #1f5d87;
+    }
+
+    .payment-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .payment-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+
+    .payment-table th,
+    .payment-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    .payment-table th {
+        background: #f1f5f9;
+        color: #243b53;
+    }
+
+    .payment-table tr:hover {
+        background: #f9fafb;
+    }
+
+    .payment-status {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: capitalize;
+    }
+
+    .status-confirmed {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-failed {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .empty-message {
+        color: #687786;
+        padding: 15px 0;
+    }
+
+    @media (max-width: 600px) {
+        .assignment-card {
+            padding: 18px;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="assignment-container">
+
+    <div class="assignment-card">
+
+        <h2>My Active Assignment</h2>
+
+        {% if allocation %}
+
+            <div class="assignment-details">
+
+                <p>
+                    <strong>Vehicle:</strong>
+                    {{ vehicle.reg_no }}
+                </p>
+
+                <p>
+                    <strong>Route:</strong>
+                    {{ route.start_point }} - {{ route.destination }}
+                </p>
+
+                <p>
+                    <strong>Assignment Started:</strong>
+                    {{ (allocation.started_at|kenya_time).strftime('%d %b %Y, %I:%M %p')
+                        if allocation.started_at else 'Not available' }}
+                </p>
+
+                <p>
+                    <strong>Assignment Status:</strong>
+                    {{ allocation.status|title }}
+                </p>
+
+            </div>
+
+            <a
+                href="{{ url_for('conductor.cash_payment') }}"
+                class="assignment-button"
+            >
+                Record Cash Payment
+            </a>
+
+            <a
+                href="{{ url_for('conductor.mpesa_payment') }}"
+                class="assignment-button"
+            >
+                Request M-Pesa Payment
+            </a>
+
+        {% else %}
+
+            <p class="empty-message">
+                You currently do not have an active vehicle assignment.
+                Contact your supervisor for assistance.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <div class="assignment-card">
+
+        <h2>My Payment History</h2>
+
+        {% if payments %}
+
+            <div class="payment-table-wrapper">
+
+                <table class="payment-table">
+
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Date</th>
+                            <th>Direction</th>
+                            <th>Time Band</th>
+                            <th>Method</th>
+                            <th>Fare (KSh)</th>
+                            <th>Amount Received</th>
+                            <th>Change</th>
+                            <th>Receipt Number</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for payment in payments %}
+
+                            <tr>
+                                <td>{{ payment.id }}</td>
+
+                                <td>
+                                    {{ (payment.created_at|kenya_time).strftime('%d %b %Y, %I:%M %p')
+                                        if payment.created_at else '-' }}
+                                </td>
+
+                                <td>{{ payment.direction }}</td>
+
+                                <td>
+                                    {{ payment.time_band.replace('_', ' ')|title }}
+                                </td>
+
+                                <td>
+                                    {{ payment.payment_method|upper }}
+                                </td>
+
+                                <td>
+                                    {{ "%.2f"|format(payment.fare_amount) }}
+                                </td>
+
+                                <td>
+                                    {% if payment.amount_given is not none %}
+                                        {{ "%.2f"|format(payment.amount_given) }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if payment.change_given is not none %}
+                                        {{ "%.2f"|format(payment.change_given) }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ payment.transaction_ref or '-' }}
+                                </td>
+
+                                <td>
+                                    <span class="payment-status status-{{ payment.payment_status }}">
+                                        {{ payment.payment_status|title }}
+                                    </span>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <p class="empty-message">
+                No payment records have been created yet.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

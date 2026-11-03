@@ -1,0 +1,191 @@
+{% extends "internal_base.html" %}
+
+{% block title %}M-Pesa Payments | MatatuHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-page {
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    .payment-card {
+        background: #fff;
+        border-radius: 9px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        margin-bottom: 22px;
+        padding: 25px;
+    }
+
+    .payment-card h2 {
+        color: #243b53;
+        margin-top: 0;
+    }
+
+    .payment-details p {
+        margin: 8px 0;
+    }
+
+    .payment-form label {
+        display: block;
+        font-weight: 600;
+        margin: 16px 0 6px;
+    }
+
+    .payment-form select,
+    .payment-form input[type="tel"] {
+        box-sizing: border-box;
+        max-width: 100%;
+        padding: 10px;
+        width: 100%;
+    }
+
+    .payment-form select {
+        background: #fff;
+        color: #243b53;
+        min-height: 44px;
+    }
+
+    .payment-form .confirmation-label {
+        align-items: flex-start;
+        display: flex;
+        font-weight: 400;
+        gap: 8px;
+    }
+
+    .fare-display {
+        color: #243b53;
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin: 12px 0;
+    }
+
+    .payment-button {
+        background: #2874a6;
+        border: 0;
+        border-radius: 5px;
+        color: #fff;
+        cursor: pointer;
+        margin-top: 20px;
+        padding: 11px 17px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="payment-page">
+    <section class="payment-card payment-details">
+        <h2>M-Pesa Payment</h2>
+        <p><strong>Vehicle:</strong> {{ vehicle.reg_no }}</p>
+        <p><strong>Assigned route:</strong> {{ route.start_point }} - {{ route.destination }}</p>
+        <p><strong>Current time band:</strong> {{ time_band.replace('_', ' ')|title }}</p>
+    </section>
+
+    <section class="payment-card">
+        <form
+            id="mpesa-form"
+            class="payment-form"
+            method="post"
+            action="{{ url_for('conductor.request_mpesa') }}"
+        >
+            <label for="mpesa_direction">Fare direction</label>
+            <select
+                id="mpesa_direction"
+                name="direction"
+                required
+                {% if not fares %}disabled{% endif %}
+            >
+                <option value="">
+                    {% if fares %}
+                        Select a direction
+                    {% else %}
+                        No {{ time_band.replace('_', ' ') }} fares available
+                    {% endif %}
+                </option>
+                {% for direction, fare in fares.items() %}
+                    <option value="{{ direction }}" data-fare="{{ '%.2f'|format(fare) }}">
+                        {{ direction }} — KSh {{ "%.2f"|format(fare) }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <p class="fare-display" aria-live="polite">
+                Exact amount requested: <span id="mpesa_fare">Select a direction</span>
+            </p>
+
+            {% if not fares %}
+                <p role="status" class="fare-unavailable">
+                    No current {{ time_band.replace('_', ' ') }} fare is configured
+                    for this assigned route. M-Pesa requests are unavailable until
+                    Operations adds a fare for this time band.
+                </p>
+            {% endif %}
+
+            <label for="commuter_phone">Commuter's phone number</label>
+            <input
+                id="commuter_phone"
+                name="commuter_phone"
+                type="tel"
+                maxlength="20"
+                autocomplete="tel"
+                required
+            >
+
+            <label class="confirmation-label" for="confirm_payment">
+                <input
+                    id="confirm_payment"
+                    name="confirm_payment"
+                    type="checkbox"
+                    value="yes"
+                    required
+                >
+                I confirm that the amount shown above is the amount to request.
+            </label>
+
+            <button class="payment-button" type="submit" {% if not fares %}disabled{% endif %}>
+                Send M-Pesa Request
+            </button>
+        </form>
+    </section>
+</main>
+
+<script>
+    (() => {
+        const form = document.getElementById("mpesa-form");
+        const directionSelect = document.getElementById("mpesa_direction");
+        const fareDisplay = document.getElementById("mpesa_fare");
+
+        function getSelectedFare() {
+            const option = directionSelect.selectedOptions[0];
+            const fare = option ? Number(option.dataset.fare) : NaN;
+            return Number.isFinite(fare) && fare > 0 ? fare : null;
+        }
+
+        function updateFareDisplay() {
+            const fare = getSelectedFare();
+            fareDisplay.textContent = fare === null
+                ? "Select a direction"
+                : "KSh " + fare.toFixed(2);
+        }
+
+        directionSelect.addEventListener("change", updateFareDisplay);
+        updateFareDisplay();
+
+        form.addEventListener("submit", (event) => {
+            const amount = getSelectedFare();
+            if (amount === null) {
+                event.preventDefault();
+                alert("Please select a valid fare direction.");
+                return;
+            }
+
+            if (!confirm(
+                "Send an M-Pesa STK Push request for KSh " +
+                amount.toFixed(2) + "?"
+            )) {
+                event.preventDefault();
+            }
+        });
+    })();
+</script>
+{% endblock %}

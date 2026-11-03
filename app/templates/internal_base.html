@@ -49,6 +49,7 @@
 
         <!-- MANAGEMENT -->
         {% if role in ["General Manager", "Deputy General Manager"] %}
+
             <div class="sidebar-heading">Management</div>
 
             <nav class="sidebar-nav">
@@ -80,6 +81,7 @@
 
         <!-- SYSTEM ADMINISTRATION -->
         {% elif role == "System Administrator" %}
+
             <div class="sidebar-heading">System Administration</div>
 
             <nav class="sidebar-nav">
@@ -101,6 +103,7 @@
 
         <!-- HUMAN RESOURCES -->
         {% elif role == "HR Manager" %}
+
             <div class="sidebar-heading">Human Resources</div>
 
             <nav class="sidebar-nav">
@@ -127,6 +130,7 @@
 
         <!-- OPERATIONS -->
         {% elif role in ["Operations Manager", "Operations Officer"] %}
+
             <div class="sidebar-heading">Operations</div>
 
             <nav class="sidebar-nav">
@@ -142,6 +146,7 @@
 
         <!-- FLEET -->
         {% elif role in ["Fleet Manager", "Fleet Officer", "Inspector"] %}
+
             <div class="sidebar-heading">Fleet Management</div>
 
             <nav class="sidebar-nav">
@@ -154,16 +159,6 @@
                     <a href="{{ url_for('fleet.new_allocation') }}"
                        class="{% if request.endpoint == 'fleet.new_allocation' %}active{% endif %}">
                         New Allocation
-                    </a>
-
-                    <a href="{{ url_for('fleet.vehicle_documents', vehicle_id=1) }}"
-                       class="{% if request.endpoint == 'fleet.vehicle_documents' %}active{% endif %}">
-                        Vehicle Documents
-                    </a>
-
-                    <a href="{{ url_for('fleet.vehicle_maintenance', vehicle_id=1) }}"
-                       class="{% if request.endpoint == 'fleet.vehicle_maintenance' %}active{% endif %}">
-                        Vehicle Maintenance
                     </a>
                 {% endif %}
 
@@ -178,56 +173,61 @@
         <!-- FINANCE -->
         {% elif role in ["Finance Manager", "Accountant", "Finance Officer", "Payroll Officer"] %}
 
-    <div class="sidebar-heading">Finance</div>
+            <div class="sidebar-heading">Finance</div>
 
-    <nav class="sidebar-nav">
+            <nav class="sidebar-nav">
 
-        {% if role in ["Finance Manager", "Payroll Officer"] %}
-            <a href="{{ url_for('finance.list_payroll') }}"
-               class="{% if request.endpoint in ['finance.list_payroll', 'finance.new_payroll'] %}active{% endif %}">
-                Payroll
-            </a>
-        {% endif %}
+                {% if role in ["Finance Manager", "Payroll Officer"] %}
+                    <a href="{{ url_for('finance.list_payroll') }}"
+                       class="{% if request.endpoint in ['finance.list_payroll', 'finance.new_payroll'] %}active{% endif %}">
+                        Payroll
+                    </a>
+                {% endif %}
 
+                <a href="{{ url_for('finance.list_claims') }}"
+                   class="{% if request.endpoint == 'finance.list_claims' %}active{% endif %}">
+                    Claims
+                </a>
 
-        <a href="{{ url_for('finance.list_claims') }}"
-           class="{% if request.endpoint == 'finance.list_claims' %}active{% endif %}">
-            Claims
-        </a>
+                {% if role in ["Finance Manager", "Accountant"] %}
+                    <a href="{{ url_for('finance.list_budgets') }}"
+                       class="{% if request.endpoint in ['finance.list_budgets', 'finance.new_budget', 'finance.edit_budget'] %}active{% endif %}">
+                        Budgets
+                    </a>
+                {% endif %}
 
+                <a href="{{ url_for('finance.collections_report') }}"
+                   class="{% if request.endpoint == 'finance.collections_report' %}active{% endif %}">
+                    Collections
+                </a>
 
-        {% if role in ["Finance Manager", "Accountant"] %}
-            <a href="{{ url_for('finance.list_budgets') }}"
-               class="{% if request.endpoint in ['finance.list_budgets', 'finance.new_budget', 'finance.edit_budget'] %}active{% endif %}">
-                Budgets
-            </a>
-        {% endif %}
+            </nav>
 
-
-        <a href="{{ url_for('finance.collections_report') }}"
-           class="{% if request.endpoint == 'finance.collections_report' %}active{% endif %}">
-            Collections
-        </a>
-
-    </nav>
         <!-- DRIVER -->
         {% elif role == "Driver" %}
+
             <div class="sidebar-heading">Driver Portal</div>
 
-            <a href="{{ url_for('driver.my_assignment') }}">
-                My Assignment
-            </a>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('driver.my_assignment') }}"
+                   class="{% if request.endpoint == 'driver.my_assignment' %}active{% endif %}">
+                    My Assignment
+                </a>
 
-            <a href="{{ url_for('driver.new_trip_log') }}">
-                Record Trip Log
-            </a>
+                <a href="{{ url_for('driver.new_trip_log') }}"
+                   class="{% if request.endpoint == 'driver.new_trip_log' %}active{% endif %}">
+                    Record Trip Log
+                </a>
 
-            <a href="{{ url_for('driver.my_trip_logs') }}">
-                My Trip Logs
-            </a>
+                <a href="{{ url_for('driver.my_trip_logs') }}"
+                   class="{% if request.endpoint == 'driver.my_trip_logs' %}active{% endif %}">
+                    My Trip Logs
+                </a>
+            </nav>
 
         <!-- DRIVER OPERATIONS -->
         {% elif role == "Driver Operations Supervisor" %}
+
             <div class="sidebar-heading">Driver Operations</div>
 
             <nav class="sidebar-nav">
@@ -249,6 +249,7 @@
 
         <!-- CONDUCTOR -->
         {% elif role == "Conductor" %}
+
             <div class="sidebar-heading">Conductor Portal</div>
 
             <nav class="sidebar-nav">
@@ -257,14 +258,20 @@
                     My Assignment
                 </a>
 
-                <a href="{{ url_for('conductor.new_payment_log') }}"
-                   class="{% if request.endpoint == 'conductor.new_payment_log' %}active{% endif %}">
-                    Record Payment
+                <a href="{{ url_for('conductor.cash_payment') }}"
+                   class="{% if request.endpoint == 'conductor.cash_payment' %}active{% endif %}">
+                    Cash Payments
+                </a>
+
+                <a href="{{ url_for('conductor.mpesa_payment') }}"
+                   class="{% if request.endpoint == 'conductor.mpesa_payment' %}active{% endif %}">
+                    M-Pesa Payments
                 </a>
             </nav>
 
         <!-- CONDUCTOR OPERATIONS -->
         {% elif role == "Conductor Operations Supervisor" %}
+
             <div class="sidebar-heading">Conductor Operations</div>
 
             <nav class="sidebar-nav">
@@ -291,6 +298,7 @@
     <main class="internal-content">
 
         {% block flash_messages %}
+
             {% set endpoint = request.endpoint or "" %}
 
             {% if endpoint.startswith("hr.") %}
@@ -304,8 +312,13 @@
                     {% endif %}
                 {% endwith %}
 
-            {% elif endpoint.startswith("admin.") %}
-                {% with messages = get_flashed_messages(category_filter=["success", "error"]) %}
+            {% elif endpoint.startswith("admin.") or
+                  endpoint.startswith("finance.") or
+                  endpoint.startswith("conductor.") or
+                  endpoint.startswith("conductor_operations.") or
+                  endpoint.startswith("payments.") %}
+
+                {% with messages = get_flashed_messages(category_filter=["success", "error", "warning", "info"]) %}
                     {% if messages %}
                         <div class="flash-container">
                             {% for message in messages %}
@@ -315,17 +328,8 @@
                     {% endif %}
                 {% endwith %}
 
-            {% elif endpoint.startswith("finance.") %}
-                {% with messages = get_flashed_messages(category_filter=["success", "error"]) %}
-                    {% if messages %}
-                        <div class="flash-container">
-                            {% for message in messages %}
-                                <div class="flash-message">{{ message }}</div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                {% endwith %}
             {% endif %}
+
         {% endblock %}
 
         {% block content %}{% endblock %}

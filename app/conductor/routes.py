@@ -6,7 +6,6 @@ from flask import (
     flash,
     request,
 )
-
 from flask_login import login_required, current_user
 
 from app.auth.decorators import role_required
@@ -16,11 +15,10 @@ from app.conductor.services import (
     get_conductor_active_assignment,
     get_conductor_assignment_details,
     get_conductor_payment_logs,
-    get_available_directions,
-    detect_time_band,
-    create_payment_log,
+    get_payment_context,
+    record_cash_payment,
+    create_mpesa_payment,
 )
-
 
 conductor_bp = Blueprint(
     "conductor",
@@ -30,15 +28,30 @@ conductor_bp = Blueprint(
 )
 
 
-# ============================================================
-# CONDUCTOR ASSIGNMENT AND PAYMENT HISTORY
-# ============================================================
+def get_payment_page_context():
+    employee_id = current_user.employee.id
+    allocation = get_conductor_active_assignment(employee_id)
+
+    if not allocation:
+        return None
+
+    vehicle, route = get_conductor_assignment_details(allocation)
+    time_band, directions, fares = get_payment_context(route.id)
+
+    return {
+        "allocation": allocation,
+        "vehicle": vehicle,
+        "route": route,
+        "time_band": time_band,
+        "directions": directions,
+        "fares": fares,
+    }
+
 
 @conductor_bp.route("/my-assignment")
 @login_required
 @role_required("Conductor")
 def my_assignment():
-
     employee_id = current_user.employee.id
 
     allocation = get_conductor_active_assignment(employee_id)
@@ -60,108 +73,108 @@ def my_assignment():
     )
 
 
-# ============================================================
-# RECORD COMMUTER PAYMENT
-# ============================================================
-
-@conductor_bp.route(
-    "/payment-log/new",
-    methods=["GET", "POST"]
-)
+@conductor_bp.route("/payment-log/cash", methods=["GET"])
 @login_required
 @role_required("Conductor")
-def new_payment_log():
+def cash_payment():
+    context = get_payment_page_context()
 
-    employee_id = current_user.employee.id
-
-    allocation = get_conductor_active_assignment(employee_id)
-
-    if not allocation:
-        flash("You do not have an active vehicle allocation.")
-
-        return redirect(
-            url_for("conductor.my_assignment")
-        )
-
-    vehicle, route = get_conductor_assignment_details(allocation)
-
-    time_band = detect_time_band()
-
-    directions = get_available_directions(
-        allocation.route_id
-    )
-
-    if request.method == "POST":
-
-        direction = request.form.get(
-            "direction",
-            ""
-        ).strip()
-
-        commuter_phone = request.form.get(
-            "commuter_phone",
-            ""
-        ).strip()
-
-        amount_given = request.form.get(
-            "amount_given",
-            ""
-        ).strip()
-
-        if direction not in directions:
-            flash(
-                "Select a valid fare direction for your assigned route."
-            )
-
-            return render_template(
-                "conductor/new_payment_log.html",
-                allocation=allocation,
-                vehicle=vehicle,
-                route=route,
-                directions=directions,
-                time_band=detect_time_band(),
-            )
-
-        payment, error = create_payment_log(
-            employee_id=employee_id,
-            allocation_id=allocation.id,
-            direction=direction,
-            commuter_phone=commuter_phone,
-            amount_given=amount_given,
-        )
-
-        if error:
-            flash(error)
-
-            return render_template(
-                "conductor/new_payment_log.html",
-                allocation=allocation,
-                vehicle=vehicle,
-                route=route,
-                directions=directions,
-                time_band=detect_time_band(),
-            )
-
-        log_action(
-            "Created conductor payment log",
-            "payment_logs",
-            payment.id
-        )
-
-        flash(
-            "Payment recorded successfully. "
-            "Its status is pending confirmation."
-        )
-
-        return redirect(
-            url_for("conductor.my_assignment")
-        )
+    if not context:
+        flash("You do not have an active vehicle allocation.", "warning")
+        return redirect(url_for("conductor.my_assignment"))
 
     return render_template(
-        "conductor/new_payment_log.html",
-        allocation=allocation,
-        vehicle=vehicle,
-        route=route,
-        directions=directions,
-        time_band=time_band,
+        "conductor/cash_payment.html",
+        **context
     )
+
+
+@conductor_bp.route("/payment-log/mpesa", methods=["GET"])
+@login_required
+@role_required("Conductor")
+def mpesa_payment():
+    context = get_payment_page_context()
+
+    if not context:
+        flash("You do not have an active vehicle allocation.", "warning")
+        return redirect(url_for("conductor.my_assignment"))
+
+    return render_template(
+        "conductor/mpesa_payment.html",
+        **context
+    )
+
+
+@conductor_bp.route("/payment-log/cash/record", methods=["POST"])
+@login_required
+@role_required("Conductor")
+def record_cash():
+    context = get_payment_page_context()
+
+    if not context:
+        flash("You do not have an active vehicle allocation.", "warning")
+        return redirect(url_for("conductor.my_assignment"))
+
+    payment, error = record_cash_payment(
+        employee_id=current_user.employee.id,
+        allocation_id=context["allocation"].id,
+        direction=request.form.get("direction"),
+        amount_given=request.form.get("amount_given"),
+    )
+
+    if error:
+        flash(error, "error")
+        return redirect(url_for("conductor.cash_payment"))
+
+    log_action(
+        "Recorded cash conductor payment",
+        "payment_logs",
+        payment.id
+    )
+
+    flash("Cash payment recorded successfully.", "success")
+
+    return redirect(url_for("conductor.my_assignment"))
+
+
+@conductor_bp.route("/payment-log/mpesa/request", methods=["POST"])
+@login_required
+@role_required("Conductor")
+def request_mpesa():
+    context = get_payment_page_context()
+
+    if not context:
+        flash("You do not have an active vehicle allocation.", "warning")
+        return redirect(url_for("conductor.my_assignment"))
+
+    if request.form.get("confirm_payment") != "yes":
+        flash(
+            "Confirm the M-Pesa amount before sending the request.",
+            "error",
+        )
+        return redirect(url_for("conductor.mpesa_payment"))
+
+    payment, error = create_mpesa_payment(
+        employee_id=current_user.employee.id,
+        allocation_id=context["allocation"].id,
+        direction=request.form.get("direction"),
+        commuter_phone=request.form.get("commuter_phone"),
+    )
+
+    if error:
+        flash(error, "error")
+        return redirect(url_for("conductor.mpesa_payment"))
+
+    log_action(
+        "Initiated M-Pesa STK Push",
+        "payment_logs",
+        payment.id
+    )
+
+    flash(
+        "M-Pesa request sent. Ask the commuter to complete "
+        "the prompt on their phone.",
+        "success",
+    )
+
+    return redirect(url_for("conductor.my_assignment"))

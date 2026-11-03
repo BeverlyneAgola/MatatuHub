@@ -1,0 +1,136 @@
+{% extends "internal_base.html" %}
+
+{% block title %}Cash Payments | MatatuHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-page {
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    .payment-card {
+        background: #fff;
+        border-radius: 9px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        margin-bottom: 22px;
+        padding: 25px;
+    }
+
+    .payment-card h2 {
+        color: #243b53;
+        margin-top: 0;
+    }
+
+    .payment-details p {
+        margin: 8px 0;
+    }
+
+    .payment-form label {
+        display: block;
+        font-weight: 600;
+        margin: 16px 0 6px;
+    }
+
+    .payment-form select,
+    .payment-form input {
+        box-sizing: border-box;
+        max-width: 100%;
+        padding: 10px;
+        width: 100%;
+    }
+
+    .fare-display {
+        color: #243b53;
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin: 12px 0;
+    }
+
+    .payment-button {
+        background: #2874a6;
+        border: 0;
+        border-radius: 5px;
+        color: #fff;
+        cursor: pointer;
+        margin-top: 20px;
+        padding: 11px 17px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="payment-page">
+    <section class="payment-card payment-details">
+        <h2>Cash Payment</h2>
+        <p><strong>Vehicle:</strong> {{ vehicle.reg_no }}</p>
+        <p><strong>Assigned route:</strong> {{ route.start_point }} - {{ route.destination }}</p>
+        <p><strong>Current time band:</strong> {{ time_band.replace('_', ' ')|title }}</p>
+    </section>
+
+    <section class="payment-card">
+        <form class="payment-form" method="post" action="{{ url_for('conductor.record_cash') }}">
+            <label for="cash_direction">Fare direction</label>
+            <select id="cash_direction" name="direction" required>
+                <option value="">Select a direction</option>
+                {% for direction in directions %}
+                    <option value="{{ direction }}">{{ direction }}</option>
+                {% endfor %}
+            </select>
+
+            <p class="fare-display" aria-live="polite">
+                Official fare: <span id="cash_fare">Select a direction</span>
+            </p>
+
+            <label for="amount_given">Amount received (KSh)</label>
+            <input
+                id="amount_given"
+                name="amount_given"
+                type="number"
+                min="0.01"
+                step="0.01"
+                inputmode="decimal"
+                required
+            >
+
+            <p class="fare-display" aria-live="polite">
+                Change: <span id="cash_change">-</span>
+            </p>
+
+            <button class="payment-button" type="submit">Record Cash Payment</button>
+        </form>
+    </section>
+</main>
+
+<script>
+    (() => {
+        const fareData = {{ fares|tojson }};
+        const directionSelect = document.getElementById("cash_direction");
+        const amountInput = document.getElementById("amount_given");
+        const fareDisplay = document.getElementById("cash_fare");
+        const changeDisplay = document.getElementById("cash_change");
+        let selectedFare = null;
+
+        function updateChange() {
+            const amount = Number(amountInput.value);
+            changeDisplay.textContent =
+                selectedFare !== null && Number.isFinite(amount) && amount >= selectedFare
+                    ? "KSh " + (amount - selectedFare).toFixed(2)
+                    : "-";
+        }
+
+        directionSelect.addEventListener("change", () => {
+            const direction = directionSelect.value;
+            selectedFare = Object.prototype.hasOwnProperty.call(fareData, direction)
+                ? Number(fareData[direction])
+                : null;
+            fareDisplay.textContent = selectedFare === null
+                ? "Select a direction"
+                : "KSh " + selectedFare.toFixed(2);
+            updateChange();
+        });
+
+        amountInput.addEventListener("input", updateChange);
+    })();
+</script>
+{% endblock %}
