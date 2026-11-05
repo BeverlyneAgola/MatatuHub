@@ -2,13 +2,13 @@
 
 An operations and business management platform for public transport operators.
 
-MatatuHub brings essential transport-business workflows into a single web application, connecting fleet and route operations with workforce administration, finance, and fare payments. It is designed to support both the people managing the business and the drivers and conductors working in the field.
+MatatuHub brings essential transport-business workflows into a single web application, connecting fleet and route operations with workforce administration, finance, and fare payments. It is designed to help transport operators run their businesses more efficiently and with better visibility.
 
 > Project status: Under active development. Features, setup instructions, and configuration may change.
 
 ## Overview
 
-MatatuHub is built for transport operators who need to manage day-to-day business operations in one place. From vehicle records and route planning to payroll, staffing, and digital fare payments, the platform centralizes the core administrative and operational functions required to run a public transport business efficiently.
+MatatuHub is built for transport operators who need to manage day-to-day business operations in one place. From vehicle records and route planning to payroll, staffing, and digital fare payments, the platform centralizes critical workflows in a single system.
 
 ## What MatatuHub supports
 
@@ -122,6 +122,16 @@ http://127.0.0.1:5000
 
 `run.py` enables Flask debug mode for local development. Do not use the development server or debug mode in a production deployment.
 
+### 7. Run the app in production
+
+For deployment, use a WSGI server such as Gunicorn:
+
+```bash
+gunicorn --bind 0.0.0.0:8000 run:app
+```
+
+This loads the Flask app object from `run.py` and starts it for production use.
+
 ## Development data
 
 To create the initial departments, roles, and system administrator in a local development database, run:
@@ -173,7 +183,7 @@ MatatuHub/
 ├── requirements.txt
 ├── run.py
 ├── seed.py
-└── README.md
+├── README.md
 ```
 
 ## Configuration and deployment notes
